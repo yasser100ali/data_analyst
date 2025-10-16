@@ -1,41 +1,207 @@
-# AI SDK Python Streaming Preview
+# Atlas Analyst Agent 🤖📊
 
-This template demonstrates the usage of [Data Stream Protocol](https://sdk.vercel.ai/docs/ai-sdk-ui/stream-protocol#data-stream-protocol) to stream chat completions from a Python endpoint ([FastAPI](https://fastapi.tiangolo.com)) and display them using the [useChat](https://sdk.vercel.ai/docs/ai-sdk-ui/chatbot#chatbot) hook in your Next.js application.
+A powerful data analyst AI agent that can analyze CSV, Excel, PDF, and text files through an intuitive chat interface. Built with Next.js, FastAPI, and OpenAI's Responses API.
 
-## Deploy your own
+## ✨ Features
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-preview-python-streaming&env=OPENAI_API_KEY&envDescription=API%20keys%20needed%20for%20application&envLink=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-preview-python-streaming%2Fblob%2Fmain%2F.env.example)
+- **📁 File Upload Support**: Drag & drop CSV, Excel, PDF, and text files for analysis
+- **🔄 Real-time Streaming**: Powered by OpenAI's Responses API for fast, responsive interactions
+- **📊 Data Analysis**: Analyze datasets, generate insights, and create visualizations
+- **🌐 Multi-platform Deployment**: Optimized for both Vercel and Railway hosting
+- **🎨 Modern UI**: Beautiful, responsive interface with dark mode support
 
-## How to use
+## 🚀 Quick Start
 
-Run [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+### Prerequisites
+
+- Node.js 18+ and npm/pnpm
+- Python 3.11+ and pip
+- OpenAI API key
+- Vercel Blob storage (for file uploads)
+
+### 1. Clone and Setup
 
 ```bash
-npx create-next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
+git clone https://github.com/yourusername/data_analyst.git
+cd data_analyst
+pnpm install
 ```
+
+### 2. Environment Variables
+
+Create a `.env` file:
 
 ```bash
-yarn create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
+# OpenAI API Key (required)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Vercel Blob Storage (for file uploads)
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_your_token_here
+
+# Railway Backend URL (set automatically in production)
+RAILWAY_BACKEND_URL=https://your-backend-service.up.railway.app
 ```
+
+### 3. Install Python Dependencies
 
 ```bash
-pnpm create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
+pip install -r requirements.txt
 ```
 
-To run the example locally you need to:
+### 4. Run Development Servers
 
-1. Sign up for accounts with the AI providers you want to use (e.g., OpenAI, Anthropic).
-2. Obtain API keys for each provider.
-3. Set the required environment variables as shown in the `.env.example` file, but in a new file called `.env`.
-4. `pnpm install` to install the required Node dependencies.
-5. `virtualenv venv` to create a virtual environment.
-6. `source venv/bin/activate` to activate the virtual environment.
-7. `pip install -r requirements.txt` to install the required Python dependencies.
-8. `pnpm dev` to launch the development server.
+```bash
+# Terminal 1: Next.js frontend
+pnpm run dev
 
-## Learn More
+# Terminal 2: FastAPI backend
+pnpm run fastapi-dev
 
-To learn more about the AI SDK or Next.js by Vercel, take a look at the following resources:
+# Or run both together:
+pnpm run dev
+```
 
-- [AI SDK Documentation](https://sdk.vercel.ai/docs)
-- [Next.js Documentation](https://nextjs.org/docs)
+## 📁 File Upload Support
+
+Users can upload and analyze:
+- **CSV files** (`.csv`) - 10MB max
+- **Excel spreadsheets** (`.xlsx`, `.xls`) - 10MB max
+- **PDF documents** (`.pdf`) - 50MB max
+- **Text files** (`.txt`) - 10MB max
+
+### How It Works
+
+1. **Drag & Drop**: Drop files anywhere on the page or click the 📎 icon
+2. **Upload**: Files are stored in Vercel Blob storage
+3. **Analysis**: Backend processes files and sends to AI for analysis
+4. **Results**: AI provides insights, summaries, and visualizations
+
+## 🚢 Deployment
+
+### Railway (Recommended for ML/Data Science)
+
+Railway offers **10GB free storage** and **8GB RAM** - perfect for data analysis!
+
+```bash
+# Deploy frontend
+railway login
+railway link
+railway up --service frontend
+
+# Deploy backend separately
+railway up --service backend
+```
+
+**Railway Configuration:**
+- **Frontend**: Custom build command: `pnpm run build`, Start command: `npm run start`
+- **Backend**: Start command: `npm run fastapi-prod`
+- **Environment**: Set `BLOB_READ_WRITE_TOKEN` in Railway dashboard
+
+### Vercel (Alternative)
+
+```bash
+# Deploy to Vercel
+vercel --prod
+```
+
+**Environment Variables in Vercel:**
+- `OPENAI_API_KEY`
+- `BLOB_READ_WRITE_TOKEN`
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Next.js       │    │   FastAPI        │    │   OpenAI        │
+│   Frontend      │◄──►│   Backend        │◄──►│   Responses API │
+│                 │    │                  │    │                 │
+│ • File Upload   │    │ • Data Processing│    │ • AI Analysis   │
+│ • UI/UX         │    │ • API Routes     │    │ • Streaming     │
+│ • Vercel Blob   │    │ • OpenAI Client  │    │ • Responses     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+## 🛠️ Tech Stack
+
+**Frontend:**
+- Next.js 13 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- Vercel Blob (file storage)
+
+**Backend:**
+- FastAPI (Python)
+- OpenAI Responses API
+- Pydantic (data validation)
+- Uvicorn (ASGI server)
+
+**AI/ML:**
+- OpenAI GPT-4
+- Responses API (streaming)
+- File processing capabilities
+
+## 📚 Documentation
+
+- [File Upload Setup](./FILE_UPLOAD_SETUP.md) - Complete file upload guide
+- [Quick Start](./QUICK_START.md) - Fast setup instructions
+- [Feature Summary](./FEATURE_SUMMARY.md) - Technical overview
+
+## 🎯 Key Capabilities
+
+- **Data Analysis**: Upload CSV/Excel files and get AI-powered insights
+- **Document Analysis**: Analyze PDF reports and documents
+- **Text Analysis**: Process text files and documents
+- **Real-time Chat**: Streaming responses for better UX
+- **File Management**: Visual file preview and removal
+- **Error Handling**: Comprehensive validation and error messages
+
+## 🔧 Development
+
+### Available Scripts
+
+```bash
+# Frontend only
+pnpm run next-dev     # Next.js dev server
+pnpm run build        # Production build
+pnpm run start        # Production server
+
+# Backend only
+pnpm run fastapi-dev  # FastAPI dev server
+pnpm run fastapi-prod # FastAPI production server
+
+# Combined
+pnpm run dev          # Both servers concurrently
+pnpm run start:all    # Both servers in production mode
+```
+
+### Project Structure
+
+```
+├── app/                 # Next.js app router
+│   ├── api/blob/       # File upload API routes
+│   └── (chat)/         # Chat interface
+├── components/         # React components
+│   ├── multimodal-input.tsx  # File upload UI
+│   └── markdown.tsx    # Math/LaTeX rendering
+├── api/                # FastAPI backend
+│   ├── index.py        # Main API routes
+│   └── utils/          # Helper functions
+└── requirements.txt    # Python dependencies
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+---
+
+**Built with ❤️ by AI Engineer Yasser Ali**
