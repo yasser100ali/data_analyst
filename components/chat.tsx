@@ -10,6 +10,10 @@ import { toast } from "sonner";
 export function Chat() {
   const chatId = "001";
 
+  const backendUrl = process.env.NODE_ENV === "development" 
+    ? "http://127.0.0.1:8000"
+    : process.env.NEXT_PUBLIC_API_URL || "https://api.example.com";
+
   const {
     messages,
     setMessages,
@@ -20,6 +24,7 @@ export function Chat() {
     isLoading,
     stop,
   } = useChat({
+    api: `${backendUrl}/api/chat`,
     maxSteps: 4,
     onError: (error) => {
       if (error.message.includes("Too many requests")) {
