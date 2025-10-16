@@ -25,61 +25,33 @@ class ClientMessage(BaseModel):
     experimental_attachments: Optional[List[ClientAttachment]] = None
     toolInvocations: Optional[List[ToolInvocation]] = None
 
-def convert_to_openai_messages(messages: List[ClientMessage]) -> List[ChatCompletionMessageParam]:
-    openai_messages = []
+
+def convert_to_openai_messages(messages: List[ClientMessage]) -> List[dict]:
+    """
+    Convert to Responses-friendly [{role, content}] messages:
+    - Drop tool_calls, tool results, and role=='tool' messages
+    - Flatten multi-part content to plain text (attachments omitted)
+    """
+    openai_messages: List[dict] = []
 
     for message in messages:
-        parts = []
-        tool_calls = []
+        # Flatten content + any text attachments into one string
+        text_parts = [message.content or ""]
+        if message.experimental_attachments:
+            for a in message.experimental_attachments:
+                # keep only text attachments as text; ignore images for now
+                if a.contentType.startswith("text"):
+                    text_parts.append(a.url)
 
-        parts.append({
-            'type': 'text',
-            'text': message.content
-        })
+        flat_text = "".join(text_parts).strip()
 
-        if (message.experimental_attachments):
-            for attachment in message.experimental_attachments:
-                if (attachment.contentType.startswith('image')):
-                    parts.append({
-                        'type': 'image_url',
-                        'image_url': {
-                            'url': attachment.url
-                        }
-                    })
-
-                elif (attachment.contentType.startswith('text')):
-                    parts.append({
-                        'type': 'text',
-                        'text': attachment.url
-                    })
-
-        if(message.toolInvocations):
-            for toolInvocation in message.toolInvocations:
-                tool_calls.append({
-                    "id": toolInvocation.toolCallId,
-                    "type": "function",
-                    "function": {
-                        "name": toolInvocation.toolName,
-                        "arguments": json.dumps(toolInvocation.args)
-                    }
-                })
-
-        tool_calls_dict = {"tool_calls": tool_calls} if tool_calls else {"tool_calls": None}
+        # Skip any tool results entirely
+        if message.role == "tool":
+            continue
 
         openai_messages.append({
-            "role": message.role,
-            "content": parts,
-            **tool_calls_dict,
+            "role": message.role,   # 'user' or 'assistant'
+            "content": flat_text,
         })
 
-        if(message.toolInvocations):
-            for toolInvocation in message.toolInvocations:
-                tool_message = {
-                    "role": "tool",
-                    "tool_call_id": toolInvocation.toolCallId,
-                    "content": json.dumps(toolInvocation.result),
-                }
-
-                openai_messages.append(tool_message)
-
-    return openai_messages
+    return openai_messages 

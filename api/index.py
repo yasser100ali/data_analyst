@@ -8,10 +8,8 @@ from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages
-from .utils.tools import get_current_weather
 
-
-load_dotenv(".env.local")
+load_dotenv()
 
 app = FastAPI()
 
@@ -24,121 +22,52 @@ class Request(BaseModel):
     messages: List[ClientMessage]
 
 
-available_tools = {
-    "get_current_weather": get_current_weather,
-}
+instructions = """
+You are part of a full-stack demo built by AI Engineer **Yasser Ali** (...
+Try to be short and to the point.
+""".strip()
 
-def do_stream(messages: List[ChatCompletionMessageParam]):
-    stream = client.chat.completions.create(
-        messages=messages,
-        model="gpt-4o",
-        stream=True,
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather at a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "latitude": {
-                            "type": "number",
-                            "description": "The latitude of the location",
-                        },
-                        "longitude": {
-                            "type": "number",
-                            "description": "The longitude of the location",
-                        },
-                    },
-                    "required": ["latitude", "longitude"],
-                },
-            },
-        }]
-    )
 
-    return stream
+def stream_text(messages: List[dict], protocol: str = "data"):
+    # Pick a valid model. Examples: "gpt-5" (reasoning) or "gpt-4.1-mini" (fast/cheap)
+    model_name = "gpt-4.1-mini"
 
-def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'data'):
-    draft_tool_calls = []
-    draft_tool_calls_index = -1
+    # If you prefer instructions + single string input, change input=messages to a string.
+    with client.responses.stream(
+        model=model_name,
+        instructions=instructions,     # keep your existing instructions var
+        input=messages
+    ) as stream:
+        for event in stream:
+            et = getattr(event, "type", None)
 
-    stream = client.chat.completions.create(
-        messages=messages,
-        model="gpt-4o",
-        stream=True,
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather at a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "latitude": {
-                            "type": "number",
-                            "description": "The latitude of the location",
-                        },
-                        "longitude": {
-                            "type": "number",
-                            "description": "The longitude of the location",
-                        },
-                    },
-                    "required": ["latitude", "longitude"],
-                },
-            },
-        }]
-    )
+            # Stream plain text deltas
+            if et == "response.output_text.delta":
+                # event.delta is the incremental text chunk
+                yield "0:{text}\n".format(text=json.dumps(event.delta))
 
-    for chunk in stream:
-        for choice in chunk.choices:
-            if choice.finish_reason == "stop":
-                continue
+            # Optional: surface model/tool errors mid-stream
+            elif et == "response.error":
+                err = getattr(event, "error", {}) or {}
+                msg = err.get("message", "unknown error")
+                yield 'e:{{"finishReason":"error","message":{msg}}}\n'.format(
+                    msg=json.dumps(msg)
+                )
 
-            elif choice.finish_reason == "tool_calls":
-                for tool_call in draft_tool_calls:
-                    yield '9:{{"toolCallId":"{id}","toolName":"{name}","args":{args}}}\n'.format(
-                        id=tool_call["id"],
-                        name=tool_call["name"],
-                        args=tool_call["arguments"])
+        # When the stream completes, you can fetch the final structured response
+        final = stream.get_final_response()
 
-                for tool_call in draft_tool_calls:
-                    tool_result = available_tools[tool_call["name"]](
-                        **json.loads(tool_call["arguments"]))
+        # Usage fields are on the final response (when available)
+        usage = getattr(final, "usage", None)
+        # The Responses API reports tokens typically as input_tokens/output_tokens
+        prompt_tokens = getattr(usage, "input_tokens", None) if usage else None
+        completion_tokens = getattr(usage, "output_tokens", None) if usage else None
 
-                    yield 'a:{{"toolCallId":"{id}","toolName":"{name}","args":{args},"result":{result}}}\n'.format(
-                        id=tool_call["id"],
-                        name=tool_call["name"],
-                        args=tool_call["arguments"],
-                        result=json.dumps(tool_result))
-
-            elif choice.delta.tool_calls:
-                for tool_call in choice.delta.tool_calls:
-                    id = tool_call.id
-                    name = tool_call.function.name
-                    arguments = tool_call.function.arguments
-
-                    if (id is not None):
-                        draft_tool_calls_index += 1
-                        draft_tool_calls.append(
-                            {"id": id, "name": name, "arguments": ""})
-
-                    else:
-                        draft_tool_calls[draft_tool_calls_index]["arguments"] += arguments
-
-            else:
-                yield '0:{text}\n'.format(text=json.dumps(choice.delta.content))
-
-        if chunk.choices == []:
-            usage = chunk.usage
-            prompt_tokens = usage.prompt_tokens
-            completion_tokens = usage.completion_tokens
-
-            yield 'e:{{"finishReason":"{reason}","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
-                reason="tool-calls" if len(
-                    draft_tool_calls) > 0 else "stop",
-                prompt=prompt_tokens,
-                completion=completion_tokens
-            )
+        # Send your terminal event line (no tools here)
+        yield 'e:{{"finishReason":"stop","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
+            prompt=json.dumps(prompt_tokens),
+            completion=json.dumps(completion_tokens),
+        )
 
 
 
