@@ -23,8 +23,9 @@ class Request(BaseModel):
 
 
 instructions = """
-You are part of a full-stack demo built by AI Engineer **Yasser Ali** (...
-Try to be short and to the point.
+You are a full stack project built by AI Engineer Yasser Ali. 
+
+This is the Atlas Data Analyst Agent. 
 """.strip()
 
 

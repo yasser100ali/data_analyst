@@ -21,14 +21,14 @@ import { Textarea } from "./ui/textarea";
 
 const suggestedActions = [
   {
-    title: "What is the weather",
-    label: "in San Francisco?",
-    action: "What is the weather in San Francisco?",
+    title: "How does the Atlas Analyst Agent work?",
+    label: "",
+    action: "How does the Atlas Analyst Agent work?",
   },
   {
-    title: "How is python useful",
-    label: "for AI engineers?",
-    action: "How is python useful for AI engineers?",
+    title: "What could Atlas do that ChatGPT Data Analyst can't?",
+    label: "",
+    action: "What could Atlas do that ChatGPT Data Analyst can't?",
   },
 ];
 
@@ -135,12 +135,14 @@ export function MultimodalInput({
                     content: suggestedAction.action,
                   });
                 }}
-                className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+                className="text-left border rounded-xl px-4 py-3.5 text-sm w-full h-auto min-h-[60px] flex flex-col justify-start items-start overflow-hidden whitespace-normal"
               >
-                <span className="font-medium">{suggestedAction.title}</span>
-                <span className="text-muted-foreground">
-                  {suggestedAction.label}
-                </span>
+                <span className="font-medium break-words overflow-wrap-anywhere w-full leading-tight">{suggestedAction.title}</span>
+                {suggestedAction.label && (
+                  <span className="text-muted-foreground break-words overflow-wrap-anywhere w-full leading-tight mt-1">
+                    {suggestedAction.label}
+                  </span>
+                )}
               </Button>
             </motion.div>
           ))}
