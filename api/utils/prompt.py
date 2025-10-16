@@ -1,29 +1,14 @@
 import json
-from enum import Enum
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 import base64
-from typing import List, Optional, Any
+from typing import List, Optional
 from .attachment import ClientAttachment
-
-class ToolInvocationState(str, Enum):
-    CALL = 'call'
-    PARTIAL_CALL = 'partial-call'
-    RESULT = 'result'
-
-class ToolInvocation(BaseModel):
-    state: ToolInvocationState
-    toolCallId: str
-    toolName: str
-    args: Any
-    result: Any
-
 
 class ClientMessage(BaseModel):
     role: str
     content: str
     experimental_attachments: Optional[List[ClientAttachment]] = None
-    toolInvocations: Optional[List[ToolInvocation]] = None
 
 
 def convert_to_openai_messages(messages: List[ClientMessage]) -> List[dict]:
