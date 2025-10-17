@@ -4,53 +4,30 @@ import { Button } from "./ui/button";
 import { GitIcon } from "./icons";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState } from "react";
 
 export const Navbar = () => {
-  const [isSpinning, setIsSpinning] = useState(false);
-
   const handleRefresh = () => {
-    setIsSpinning(true);
-    setTimeout(() => {
-      window.location.reload();
-    }, 600);
+    window.location.reload();
   };
 
   return (
-    <div className="relative px-4 py-4 flex flex-row gap-2 justify-between items-center bg-background border-b border-border/40">
+    <div className="px-4 py-3 flex flex-row gap-2 justify-between items-center bg-background border-b border-cyan-900/20">
       {/* Left: Logo with refresh */}
       <motion.button
         onClick={handleRefresh}
-        className="flex items-center gap-2 font-bold text-lg tracking-tighter hover:opacity-70 transition-opacity"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className="flex items-center gap-1 font-mono font-bold text-sm tracking-wider text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+        whileTap={{ scale: 0.98 }}
       >
-        <motion.div
-          animate={isSpinning ? { rotate: 360 } : { rotate: 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          onAnimationComplete={() => setIsSpinning(false)}
-          className="flex items-center gap-1"
-        >
-          <span className="text-foreground/80">[</span>
-          <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-            Atlas
-          </span>
-          <span className="text-foreground/80">]</span>
-        </motion.div>
+        <span className="text-foreground/40">&lt;</span>
+        <span>ATLAS</span>
+        <span className="text-foreground/40">/&gt;</span>
       </motion.button>
 
       {/* Right: View Source Code */}
       <Link href="https://github.com/yasser100ali/data_analyst">
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.05 }}
-        >
-          <Button variant="outline" className="text-sm">
-            <GitIcon /> View Source Code
-          </Button>
-        </motion.div>
+        <Button variant="outline" className="text-xs font-mono">
+          <GitIcon /> SOURCE
+        </Button>
       </Link>
     </div>
   );
