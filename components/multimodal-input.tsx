@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
 import { cn, sanitizeUIMessages } from "@/lib/utils";
+import { upload } from "@vercel/blob/client";
 
 import { ArrowUpIcon, StopIcon } from "./icons";
 import { Button } from "./ui/button";
@@ -282,21 +283,12 @@ export function MultimodalInput({
         try {
           uploaded = await Promise.all(
             attachments.map(async (file) => {
-              const blobUrl = process.env.BLOB_READ_WRITE_TOKEN;
-              if (!blobUrl) {
-                throw new Error("Vercel Blob URL is not configured");
-              }
+              const blob = await upload(file.name, file, {
+                access: 'public',
+                handleUploadUrl: '/api/blob/upload',
+              });
 
-              const res = await fetch(blobUrl, {
-                method: 'PUT',
-                headers: {
-                  'x-add-random-suffix': 'true',
-                  'x-content-type': file.type,
-                },
-                body: file,
-              }).then(r => r.json());
-
-              return { name: file.name, type: file.type, url: res.url };
+              return { name: file.name, type: file.type, url: blob.url };
             })
           );
         } catch (err) {
