@@ -97,6 +97,60 @@
     scrollbar-color: hsl(var(--muted)) hsl(var(--background));
 }
 
+/* Tech animations */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(34, 211, 238, 0.6), 0 0 30px rgba(59, 130, 246, 0.4);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.tech-glow {
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+.tech-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+.tech-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+
 .skeleton {
     * {
         pointer-events: none !important;

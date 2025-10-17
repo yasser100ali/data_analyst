@@ -1,57 +1,57 @@
-// "use client";
-
-// import { Button } from "./ui/button";
-// import { GitIcon } from "./icons";
-// import Link from "next/link";
-
-// export const Navbar = () => {
-//   return (
-//     <div className="p-2 flex flex-row gap-2 justify-between bg-background">
-//       <Link href="https://github.com/vercel-labs/ai-sdk-preview-python-streaming">
-//         <Button variant="outline">
-//           <GitIcon /> View Source Code
-//         </Button>
-//       </Link>
-//     </div>
-//   );
-// };
-
 "use client";
 
 import { Button } from "./ui/button";
-import { GitIcon, VercelIcon } from "./icons";
+import { GitIcon } from "./icons";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { useState } from "react";
 
 export const Navbar = () => {
+  const [isSpinning, setIsSpinning] = useState(false);
+
   const handleRefresh = () => {
-    window.location.reload();
+    setIsSpinning(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 600);
   };
 
   return (
-    <div className="p-2 flex flex-row gap-2 justify-between">
-      <Link href="https://github.com/yasser100ali/data_analyst">
-        <Button variant="outline">
-          <GitIcon /> View Source Code
-        </Button>
-      </Link>
-
-      <Button variant="outline" onClick={handleRefresh}>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="16" 
-          height="16" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-          className="mr-2"
+    <div className="relative px-4 py-4 flex flex-row gap-2 justify-between items-center bg-background border-b border-border/40">
+      {/* Left: Logo with refresh */}
+      <motion.button
+        onClick={handleRefresh}
+        className="flex items-center gap-2 font-bold text-lg tracking-tighter hover:opacity-70 transition-opacity"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <motion.div
+          animate={isSpinning ? { rotate: 360 } : { rotate: 0 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          onAnimationComplete={() => setIsSpinning(false)}
+          className="flex items-center gap-1"
         >
-          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-        </svg>
-        Refresh
-      </Button>
+          <span className="text-foreground/80">[</span>
+          <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+            Atlas
+          </span>
+          <span className="text-foreground/80">]</span>
+        </motion.div>
+      </motion.button>
+
+      {/* Right: View Source Code */}
+      <Link href="https://github.com/yasser100ali/data_analyst">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <Button variant="outline" className="text-sm">
+            <GitIcon /> View Source Code
+          </Button>
+        </motion.div>
+      </Link>
     </div>
   );
 };
