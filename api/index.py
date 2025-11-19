@@ -4,15 +4,23 @@ from typing import List
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages
+import shutil
+import os
 
 load_dotenv()
 
 app = FastAPI()
+
+# Mount the uploads directory to serve files statically
+# Ensure the directory exists
+os.makedirs("api/uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="api/uploads"), name="uploads")
 
 # Add CORS middleware
 app.add_middleware(
@@ -84,6 +92,19 @@ def stream_text(messages: List[dict], protocol: str = "data"):
         )
 
 
+
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    file_location = f"api/uploads/{file.filename}"
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Construct URL suitable for local dev
+    # In production, this would need to use the actual domain
+    url = f"http://127.0.0.1:8000/uploads/{file.filename}"
+    
+    return {"url": url, "name": file.filename, "type": file.content_type}
 
 
 @app.post("/api/chat")

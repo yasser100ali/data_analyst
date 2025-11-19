@@ -277,18 +277,26 @@ export function MultimodalInput({
       // Early exit: nothing to send
       if (!input.trim() && attachments.length === 0) return;
 
-      // Upload each file to Vercel Blob (client-side)
+      // Upload each file to local backend (Python)
       let uploaded: Array<{ name: string; type: string; url: string }> = [];
       if (attachments.length > 0) {
         try {
           uploaded = await Promise.all(
             attachments.map(async (file) => {
-              const blob = await upload(file.name, file, {
-                access: 'public',
-                handleUploadUrl: '/api/blob/upload',
+              const formData = new FormData();
+              formData.append("file", file);
+
+              const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
               });
 
-              return { name: file.name, type: file.type, url: blob.url };
+              if (!response.ok) {
+                throw new Error("Upload failed");
+              }
+
+              const data = await response.json();
+              return { name: data.name, type: data.type, url: data.url };
             })
           );
         } catch (err) {
