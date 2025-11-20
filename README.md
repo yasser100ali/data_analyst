@@ -1,6 +1,6 @@
 # Atlas Analyst Agent 🤖📊
 
-##11/19/2025
+11/19/2025
 A powerful data analyst AI agent that can analyze CSV, Excel, PDF, and text files through an intuitive chat interface. Built with Next.js, FastAPI, and OpenAI's Responses API. Goal of this is to have a data analyst AI agent that allows uers to upload their data, or have the agent look online and find data per user request at which point it will download and analyze over. 
 
 ## ✨ Features
