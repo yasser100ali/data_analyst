@@ -277,17 +277,24 @@ export function MultimodalInput({
       // Early exit: nothing to send
       if (!input.trim() && attachments.length === 0) return;
 
-      // Store input value before clearing (needed for append)
+      // Store input value and attachments before clearing (needed for append)
       const messageContent = input;
+      const filesToUpload = [...attachments];
 
       // Clear UI immediately when user hits send
       setInput("");
+      setAttachments([]);
+      if (fileInputRef.current) {
+        try {
+          fileInputRef.current.value = "";
+        } catch {}
+      }
       setLocalStorageInput("");
       resetHeight();
 
       // Upload files - use Vercel Blob in production, local backend in dev
       let uploaded: Array<{ name: string; type: string; url: string }> = [];
-      if (attachments.length > 0) {
+      if (filesToUpload.length > 0) {
         try {
           // Check if we're in development mode
           const isDev = process.env.NODE_ENV === 'development';
@@ -295,7 +302,7 @@ export function MultimodalInput({
           if (isDev) {
             // Local backend upload for development
             uploaded = await Promise.all(
-              attachments.map(async (file) => {
+              filesToUpload.map(async (file) => {
                 const formData = new FormData();
                 formData.append("file", file);
 
@@ -315,7 +322,7 @@ export function MultimodalInput({
           } else {
             // Vercel Blob upload for production
             uploaded = await Promise.all(
-              attachments.map(async (file) => {
+              filesToUpload.map(async (file) => {
                 const blob = await upload(file.name, file, {
                   access: 'public',
                   handleUploadUrl: '/api/blob/upload',
@@ -349,18 +356,12 @@ export function MultimodalInput({
         }
       );
 
-      // Clear attachments after sending
-      setAttachments([]);
-      if (fileInputRef.current) {
-        try {
-          fileInputRef.current.value = "";
-        } catch {}
-      }
+      // Focus back on input after sending
       if (width && width > 768) textareaRef.current?.focus();
     };
 
     processSubmit();
-  }, [attachments, append, input, setLocalStorageInput, width]);
+  }, [attachments, append, input, setInput, setLocalStorageInput, width, fileInputRef, resetHeight]);
 
   return (
     <div className="relative w-full flex flex-col gap-2">
