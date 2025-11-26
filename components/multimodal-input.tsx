@@ -277,28 +277,46 @@ export function MultimodalInput({
       // Early exit: nothing to send
       if (!input.trim() && attachments.length === 0) return;
 
-      // Upload each file to local backend (Python)
+      // Upload files - use Vercel Blob in production, local backend in dev
       let uploaded: Array<{ name: string; type: string; url: string }> = [];
       if (attachments.length > 0) {
         try {
-          uploaded = await Promise.all(
-            attachments.map(async (file) => {
-              const formData = new FormData();
-              formData.append("file", file);
+          // Check if we're in development mode
+          const isDev = process.env.NODE_ENV === 'development';
+          
+          if (isDev) {
+            // Local backend upload for development
+            uploaded = await Promise.all(
+              attachments.map(async (file) => {
+                const formData = new FormData();
+                formData.append("file", file);
 
-              const response = await fetch("/api/upload", {
-                method: "POST",
-                body: formData,
-              });
+                const response = await fetch("/api/upload", {
+                  method: "POST",
+                  body: formData,
+                });
 
-              if (!response.ok) {
-                throw new Error("Upload failed");
-              }
+                if (!response.ok) {
+                  throw new Error("Upload failed");
+                }
 
-              const data = await response.json();
-              return { name: data.name, type: data.type, url: data.url };
-            })
-          );
+                const data = await response.json();
+                return { name: data.name, type: data.type, url: data.url };
+              })
+            );
+          } else {
+            // Vercel Blob upload for production
+            uploaded = await Promise.all(
+              attachments.map(async (file) => {
+                const blob = await upload(file.name, file, {
+                  access: 'public',
+                  handleUploadUrl: '/api/blob/upload',
+                });
+
+                return { name: file.name, type: file.type, url: blob.url };
+              })
+            );
+          }
         } catch (err) {
           console.error(err);
           toast.error("One or more uploads failed.");
@@ -306,16 +324,22 @@ export function MultimodalInput({
         }
       }
 
-      // Send message with attachments
+      // Send message with attachments using append
       // The attachments need to be in experimental_attachments format for the AI SDK
-      handleSubmit(undefined, {
-        experimental_attachments: uploaded.map(file => ({
-          name: file.name,
-          contentType: file.type,
-          url: file.url,
-        })),
-        data: { attachments: uploaded },
-      });
+      await append(
+        {
+          role: "user",
+          content: input,
+          experimental_attachments: uploaded.map(file => ({
+            name: file.name,
+            contentType: file.type,
+            url: file.url,
+          })),
+        },
+        {
+          data: { attachments: uploaded },
+        }
+      );
 
       // Reset UI
       setAttachments([]);
@@ -330,7 +354,7 @@ export function MultimodalInput({
     };
 
     processSubmit();
-  }, [attachments, handleSubmit, input, setLocalStorageInput, width]);
+  }, [attachments, append, input, setLocalStorageInput, width]);
 
   return (
     <div className="relative w-full flex flex-col gap-2">
