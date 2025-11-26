@@ -341,7 +341,8 @@ export function MultimodalInput({
         }
       );
 
-      // Reset UI
+      // Reset UI - clear input field immediately
+      setInput("");
       setAttachments([]);
       if (fileInputRef.current) {
         try {
