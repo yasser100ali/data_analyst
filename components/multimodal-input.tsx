@@ -306,8 +306,14 @@ export function MultimodalInput({
         }
       }
 
-      // Send tiny payload to your backend (no base64)
+      // Send message with attachments
+      // The attachments need to be in experimental_attachments format for the AI SDK
       handleSubmit(undefined, {
+        experimental_attachments: uploaded.map(file => ({
+          name: file.name,
+          contentType: file.type,
+          url: file.url,
+        })),
         data: { attachments: uploaded },
       });
 

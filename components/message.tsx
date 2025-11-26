@@ -28,6 +28,17 @@ export const PreviewMessage = ({
         )}
       >
         <div className="flex flex-col gap-2 w-full">
+          {message.experimental_attachments && message.experimental_attachments.length > 0 && (
+            <div className="flex flex-row gap-2 flex-wrap">
+              {message.experimental_attachments.map((attachment, idx) => (
+                <PreviewAttachment
+                  key={attachment.url || idx}
+                  attachment={attachment}
+                />
+              ))}
+            </div>
+          )}
+
           {message.content && (
             <div className="flex flex-col gap-4">
               <Markdown>{message.content as string}</Markdown>
@@ -63,17 +74,6 @@ export const PreviewMessage = ({
                   </div>
                 );
               })}
-            </div>
-          )}
-
-          {message.experimental_attachments && (
-            <div className="flex flex-row gap-2">
-              {message.experimental_attachments.map((attachment) => (
-                <PreviewAttachment
-                  key={attachment.url}
-                  attachment={attachment}
-                />
-              ))}
             </div>
           )}
         </div>
