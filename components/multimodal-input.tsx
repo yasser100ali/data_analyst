@@ -277,6 +277,14 @@ export function MultimodalInput({
       // Early exit: nothing to send
       if (!input.trim() && attachments.length === 0) return;
 
+      // Store input value before clearing (needed for append)
+      const messageContent = input;
+
+      // Clear UI immediately when user hits send
+      setInput("");
+      setLocalStorageInput("");
+      resetHeight();
+
       // Upload files - use Vercel Blob in production, local backend in dev
       let uploaded: Array<{ name: string; type: string; url: string }> = [];
       if (attachments.length > 0) {
@@ -329,7 +337,7 @@ export function MultimodalInput({
       await append(
         {
           role: "user",
-          content: input,
+          content: messageContent,
           experimental_attachments: uploaded.map(file => ({
             name: file.name,
             contentType: file.type,
@@ -341,16 +349,13 @@ export function MultimodalInput({
         }
       );
 
-      // Reset UI - clear input field immediately
-      setInput("");
+      // Clear attachments after sending
       setAttachments([]);
       if (fileInputRef.current) {
         try {
           fileInputRef.current.value = "";
         } catch {}
       }
-      setLocalStorageInput("");
-      resetHeight();
       if (width && width > 768) textareaRef.current?.focus();
     };
 
