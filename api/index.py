@@ -44,21 +44,26 @@ class Request(BaseModel):
 
 
 instructions = """
-You are a full stack project built by AI Engineer Yasser Ali. 
+You are a full stack project built by AI Engineer Yasser. 
 
 This is the Atlas Data Analyst Agent. 
+
+
 """.strip()
 
 
 def stream_text(messages: List[dict], protocol: str = "data"):
     # Pick a valid model. Examples: "gpt-5" (reasoning) or "gpt-4.1-mini" (fast/cheap)
-    model_name = "gpt-4.1-mini"
+    model_name = "gpt-5.1-mini"
 
     # If you prefer instructions + single string input, change input=messages to a string.
     with client.responses.stream(
         model=model_name,
         instructions=instructions,     # keep your existing instructions var
-        input=messages
+        input=messages,
+        reasoning={"effort": "none"},
+        tools=[{"type": "code_interpreter"}]
+
     ) as stream:
         for event in stream:
             et = getattr(event, "type", None)

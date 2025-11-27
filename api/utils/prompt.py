@@ -3,7 +3,14 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 from pydantic import BaseModel
 import base64
 from typing import List, Optional
-from .attachment import ClientAttachment
+from pydantic import BaseModel
+
+
+class ClientAttachment(BaseModel):
+    name: str
+    contentType: str
+    url: str
+
 
 class ClientMessage(BaseModel):
     role: str

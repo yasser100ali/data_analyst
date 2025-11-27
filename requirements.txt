@@ -10,4 +10,8 @@ pypdf
 openpyxl
 cuid
 
+eval-type-backport
+
 psycopg2-binary>=2.9.9
+
+e2b_code_interpreter[sandbox]
