@@ -66,6 +66,8 @@ class DataAnalysisSession:
             print("✓ Session closed")
 
 
+
+
 # Example usage
 if __name__ == "__main__":
     # Initialize session with file

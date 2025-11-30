@@ -8,6 +8,8 @@ openai-agents
 requests
 pypdf
 openpyxl
+pandas
+numpy
 cuid
 
 eval-type-backport

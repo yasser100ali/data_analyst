@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List
+from typing import List, Optional
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages
+from .tools.data_analyst_agent import execute_data_analysis
 import shutil
 import os
 
@@ -44,32 +45,106 @@ class Request(BaseModel):
 
 
 instructions = """
-You are a full stack project built by AI Engineer Yasser. 
+You are the Atlas Data Analyst Agent, a full stack project built by AI Engineer Yasser.
 
-This is the Atlas Data Analyst Agent. 
+You are an intelligent orchestrator that helps users analyze data. When users upload data files and ask questions:
 
+1. You have access to a data analysis tool that can execute Python code on their datasets
+2. When analysis is needed, provide clear Python code instructions to the tool
+3. The tool will execute the code in a secure sandbox and return results
+4. Present the results to the user in a clear, helpful manner
 
+You are helpful, analytical, and focused on providing accurate data insights.
 """.strip()
 
 
+# Define the data analysis tool for the agent
+data_analysis_tool = {
+    "type": "function",
+    "function": {
+        "name": "execute_data_analysis",
+        "description": "Execute Python code to analyze data files. Use this when the user asks questions about uploaded datasets, wants statistical analysis, visualizations, or data transformations.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "instructions": {
+                    "type": "string",
+                    "description": "Python code to execute for the analysis. Wrap code in ```python code blocks. The code should be complete and executable. Available files are in the sandbox root directory."
+                },
+                "files": {
+                    "type": "object",
+                    "description": "Dictionary mapping filenames to their URLs/paths. E.g., {'data.csv': 'https://blob.vercel.com/abc.csv'}",
+                    "additionalProperties": {"type": "string"}
+                }
+            },
+            "required": ["instructions", "files"]
+        }
+    }
+}
+
+
 def stream_text(messages: List[dict], protocol: str = "data"):
-    # Pick a valid model. Examples: "gpt-4o" (full) or "gpt-4o-mini" (fast/cheap)
+    # Pick a valid model. Examples: "gpt-5.1" (reasoning) or "gpt-4o-mini" (fast/cheap)
     model_name = "gpt-5.1"
 
-    # If you prefer instructions + single string input, change input=messages to a string.
+    # Stream with tools enabled
     with client.responses.stream(
         model=model_name,
-        instructions=instructions,     # keep your existing instructions var
+        instructions=instructions,
         input=messages,
         reasoning={"effort": "none"},
+        #tools=[data_analysis_tool]
     ) as stream:
         for event in stream:
             et = getattr(event, "type", None)
 
             # Stream plain text deltas
             if et == "response.output_text.delta":
-                # event.delta is the incremental text chunk
                 yield "0:{text}\n".format(text=json.dumps(event.delta))
+
+            # Handle tool calls
+            elif et == "response.tool_call.start":
+                tool_call_id = getattr(event, "tool_call_id", "")
+                function_name = getattr(event, "function_name", "")
+                yield f"0:{json.dumps(f'🔧 Calling tool: {function_name}...')}\n"
+            
+            elif et == "response.tool_call.arguments.done":
+                # Tool arguments are complete - execute the tool
+                tool_call_id = getattr(event, "tool_call_id", "")
+                function_name = getattr(event, "function_name", "")
+                arguments = getattr(event, "arguments", "{}")
+                
+                if function_name == "execute_data_analysis":
+                    try:
+                        args = json.loads(arguments)
+                        result = execute_data_analysis(
+                            instructions=args.get("instructions", ""),
+                            files=args.get("files", {})
+                        )
+                        
+                        # Submit tool result back to the model
+                        stream.submit_tool_call_result(
+                            tool_call_id=tool_call_id,
+                            result=json.dumps(result)
+                        )
+                        
+                        # Stream the execution results to user
+                        if result.get("success"):
+                            yield f"0:{json.dumps('✅ Analysis completed!')}\n"
+                            if result.get("stdout"):
+                                for line in result["stdout"]:
+                                    yield f"0:{json.dumps(line)}\n"
+                        else:
+                            error_msg = result.get("error", "Unknown error")
+                            yield f"0:{json.dumps(f'❌ Error: {error_msg}')}\n"
+                            
+                    except Exception as e:
+                        error_result = json.dumps({"success": False, "error": str(e)})
+                        stream.submit_tool_call_result(
+                            tool_call_id=tool_call_id,
+                            result=error_result
+                        )
+                        yield f"0:{json.dumps(f'❌ Tool error: {str(e)}')}\n"
 
             # Optional: surface model/tool errors mid-stream
             elif et == "response.error":
