@@ -53,8 +53,8 @@ This is the Atlas Data Analyst Agent.
 
 
 def stream_text(messages: List[dict], protocol: str = "data"):
-    # Pick a valid model. Examples: "gpt-5" (reasoning) or "gpt-4.1-mini" (fast/cheap)
-    model_name = "gpt-5.1-mini"
+    # Pick a valid model. Examples: "gpt-4o" (full) or "gpt-4o-mini" (fast/cheap)
+    model_name = "gpt-5.1"
 
     # If you prefer instructions + single string input, change input=messages to a string.
     with client.responses.stream(
@@ -62,8 +62,6 @@ def stream_text(messages: List[dict], protocol: str = "data"):
         instructions=instructions,     # keep your existing instructions var
         input=messages,
         reasoning={"effort": "none"},
-        tools=[{"type": "code_interpreter"}]
-
     ) as stream:
         for event in stream:
             et = getattr(event, "type", None)

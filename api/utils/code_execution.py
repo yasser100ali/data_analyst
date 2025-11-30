@@ -4,7 +4,7 @@ from e2b_code_interpreter import Sandbox
 import requests
 
 load_dotenv()
-api_key = os.environ.get("E2B_API")
+api_key = os.environ.get("E2B_API_KEY")
 
 
 class DataAnalysisSession:
