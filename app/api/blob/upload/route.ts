@@ -7,8 +7,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     // Verify the BLOB_READ_WRITE_TOKEN is configured
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("BLOB_READ_WRITE_TOKEN is not configured in environment variables");
       return NextResponse.json(
-        { error: "BLOB_READ_WRITE_TOKEN is not configured" },
+        { error: "BLOB_READ_WRITE_TOKEN is not configured. Please set up Vercel Blob storage." },
         { status: 500 }
       );
     }
@@ -57,8 +58,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    console.error("Blob upload error:", error);
     return NextResponse.json(
-      { error: (error as Error).message },
+      { error: `Upload failed: ${(error as Error).message}` },
       { status: 400 } // The webhook will retry 5 times waiting for a 200
     );
   }
