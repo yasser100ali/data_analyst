@@ -30,6 +30,95 @@ const SUPPORTED_MIME_TYPES = [
   "text/plain",
 ] as const;
 
+// File upload cache interface
+interface CachedFile {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+  timestamp: number;
+}
+
+const CACHE_KEY = "atlas_file_upload_cache";
+const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+// Helper functions for file cache management
+const getFileCache = (): Record<string, CachedFile> => {
+  if (typeof window === "undefined") return {};
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    return cached ? JSON.parse(cached) : {};
+  } catch {
+    return {};
+  }
+};
+
+const setFileCache = (cache: Record<string, CachedFile>) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch (err) {
+    console.warn("Failed to save file cache:", err);
+  }
+};
+
+const getCacheKey = (file: File): string => {
+  return `${file.name}_${file.size}_${file.type}`;
+};
+
+const getCachedFileUrl = (file: File): CachedFile | null => {
+  const cache = getFileCache();
+  const key = getCacheKey(file);
+  const cached = cache[key];
+  
+  if (!cached) return null;
+  
+  // Check if cache is expired
+  const isExpired = Date.now() - cached.timestamp > CACHE_EXPIRY_MS;
+  if (isExpired) {
+    // Remove expired entry
+    delete cache[key];
+    setFileCache(cache);
+    return null;
+  }
+  
+  return cached;
+};
+
+const cacheFileUrl = (file: File, url: string) => {
+  const cache = getFileCache();
+  const key = getCacheKey(file);
+  
+  cache[key] = {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    url,
+    timestamp: Date.now(),
+  };
+  
+  setFileCache(cache);
+};
+
+// Clear expired cache entries on load
+const cleanExpiredCache = () => {
+  if (typeof window === "undefined") return;
+  const cache = getFileCache();
+  const now = Date.now();
+  let hasChanges = false;
+  
+  Object.keys(cache).forEach((key) => {
+    if (now - cache[key].timestamp > CACHE_EXPIRY_MS) {
+      delete cache[key];
+      hasChanges = true;
+    }
+  });
+  
+  if (hasChanges) {
+    setFileCache(cache);
+  }
+};
+
 const suggestedActions = [
   {
     title: "How does the Atlas Analyst Agent work?",
@@ -82,6 +171,11 @@ export function MultimodalInput({
   const [dragCounter, setDragCounter] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wasPageDragOverRef = useRef(false);
+
+  // Clean expired cache on component mount
+  useEffect(() => {
+    cleanExpiredCache();
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -300,7 +394,7 @@ export function MultimodalInput({
           const isDev = process.env.NODE_ENV === 'development';
           
           if (isDev) {
-            // Local backend upload for development
+            // Local backend upload for development (no caching needed)
             uploaded = await Promise.all(
               filesToUpload.map(async (file) => {
                 const formData = new FormData();
@@ -320,21 +414,33 @@ export function MultimodalInput({
               })
             );
           } else {
-            // Vercel Blob upload for production
+            // Vercel Blob upload for production - with caching
             uploaded = await Promise.all(
               filesToUpload.map(async (file) => {
+                // Check cache first
+                const cached = getCachedFileUrl(file);
+                if (cached) {
+                  console.log(`✓ Using cached URL for ${file.name}`);
+                  return { name: cached.name, type: cached.type, url: cached.url };
+                }
+
+                // Upload to Vercel Blob if not cached
+                console.log(`⬆ Uploading ${file.name} to Vercel Blob...`);
                 const blob = await upload(file.name, file, {
                   access: 'public',
                   handleUploadUrl: '/api/blob/upload',
                 });
+
+                // Cache the result
+                cacheFileUrl(file, blob.url);
 
                 return { name: file.name, type: file.type, url: blob.url };
               })
             );
           }
         } catch (err) {
-          console.error(err);
-          toast.error("One or more uploads failed.");
+          console.error("Upload error:", err);
+          toast.error("One or more uploads failed. Try renaming the file if you've uploaded it before.");
           return;
         }
       }

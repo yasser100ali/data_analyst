@@ -2,9 +2,51 @@
 
 ## Issue: "One or more uploads failed" in Production
 
-This error occurs because Vercel Blob storage is not properly configured in your production environment.
+This error occurs because Vercel Blob storage was rejecting duplicate file uploads. **This has been fixed with intelligent file caching!**
 
-## Solution: Configure Vercel Blob Storage
+## ✅ Solution Implemented: Smart File Upload Caching
+
+### How It Works
+
+The app now caches file uploads using localStorage:
+
+1. **First Upload**: File is uploaded to Vercel Blob and the URL is cached
+2. **Subsequent Uploads**: If the same file (name + size + type) is uploaded again, the cached URL is used
+3. **Cache Expiry**: Cached URLs expire after 7 days
+4. **Automatic Cleanup**: Expired cache entries are cleaned on app load
+
+### Cache Key Strategy
+
+Files are cached based on:
+- File name
+- File size  
+- File type (MIME type)
+
+This means if you upload `all_seasons.csv` (1.92 MB), it will be cached. If you upload the same file again, it uses the cached URL without re-uploading.
+
+### Benefits
+
+✅ Prevents "duplicate file" errors from Vercel Blob  
+✅ Faster uploads (instant for cached files)  
+✅ Reduces bandwidth usage  
+✅ Better user experience  
+
+### Debugging Cache (Development Only)
+
+In development mode, you can access cache utilities in the browser console:
+
+```javascript
+// View all cached files
+window.atlasFileCache.stats()
+
+// Clear the cache
+window.atlasFileCache.clear()
+
+// View raw cache data
+window.atlasFileCache.get()
+```
+
+## Initial Setup: Configure Vercel Blob Storage
 
 ### Step 1: Get Your Blob Storage Token
 
