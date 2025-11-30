@@ -390,8 +390,12 @@ export function MultimodalInput({
       let uploaded: Array<{ name: string; type: string; url: string }> = [];
       if (filesToUpload.length > 0) {
         try {
-          // Check if we're in development mode
-          const isDev = process.env.NODE_ENV === 'development';
+          // Check if we're in development mode (localhost)
+          const isDev = typeof window !== 'undefined' && 
+                       (window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1');
+          
+          console.log(`🔧 Upload mode: ${isDev ? 'Development (local backend)' : 'Production (Vercel Blob)'}`);
           
           if (isDev) {
             // Local backend upload for development (no caching needed)
@@ -425,13 +429,20 @@ export function MultimodalInput({
                 }
 
                 // Upload to Vercel Blob if not cached
-                console.log(`⬆ Uploading ${file.name} to Vercel Blob...`);
-                const blob = await upload(file.name, file, {
+                // Add timestamp to filename to avoid conflicts with existing blobs
+                const timestamp = Date.now();
+                const fileExtension = file.name.split('.').pop();
+                const fileBaseName = file.name.replace(/\.[^/.]+$/, '');
+                const uniqueFileName = `${fileBaseName}_${timestamp}.${fileExtension}`;
+                
+                console.log(`⬆ Uploading ${file.name} to Vercel Blob as ${uniqueFileName}...`);
+                
+                const blob = await upload(uniqueFileName, file, {
                   access: 'public',
                   handleUploadUrl: '/api/blob/upload',
                 });
 
-                // Cache the result
+                // Cache the result with the original file info
                 cacheFileUrl(file, blob.url);
 
                 return { name: file.name, type: file.type, url: blob.url };
@@ -440,7 +451,12 @@ export function MultimodalInput({
           }
         } catch (err) {
           console.error("Upload error:", err);
-          toast.error("One or more uploads failed. Try renaming the file if you've uploaded it before.");
+          // Log detailed error information
+          if (err instanceof Error) {
+            console.error("Error message:", err.message);
+            console.error("Error stack:", err.stack);
+          }
+          toast.error(`Upload failed: ${err instanceof Error ? err.message : "Unknown error"}. Check console for details.`);
           return;
         }
       }
