@@ -10,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages
-from .tools.data_analyst_agent import execute_data_analysis
+from .agents.coding_agent import codingAgent
+from .agents.research_agent import ResearchAgent
+
 import shutil
 import os
 
@@ -124,37 +126,37 @@ def stream_text(messages: List[dict], protocol: str = "data"):
                 function_name = getattr(event, "function_name", "")
                 arguments = getattr(event, "arguments", "{}")
                 
-                if function_name == "execute_data_analysis":
-                    try:
-                        args = json.loads(arguments)
-                        result = execute_data_analysis(
-                            instructions=args.get("instructions", ""),
-                            files=args.get("files", {})
-                        )
+                # if function_name == "execute_data_analysis":
+                #     try:
+                #         args = json.loads(arguments)
+                #         result = execute_data_analysis(
+                #             instructions=args.get("instructions", ""),
+                #             files=args.get("files", {})
+                #         )
                         
-                        # Submit tool result back to the model
-                        stream.submit_tool_call_result(
-                            tool_call_id=tool_call_id,
-                            result=json.dumps(result)
-                        )
+                #         # Submit tool result back to the model
+                #         stream.submit_tool_call_result(
+                #             tool_call_id=tool_call_id,
+                #             result=json.dumps(result)
+                #         )
                         
-                        # Stream the execution results to user
-                        if result.get("success"):
-                            yield f"0:{json.dumps('✅ Analysis completed!')}\n"
-                            if result.get("stdout"):
-                                for line in result["stdout"]:
-                                    yield f"0:{json.dumps(line)}\n"
-                        else:
-                            error_msg = result.get("error", "Unknown error")
-                            yield f"0:{json.dumps(f'❌ Error: {error_msg}')}\n"
+                #         # Stream the execution results to user
+                #         if result.get("success"):
+                #             yield f"0:{json.dumps('✅ Analysis completed!')}\n"
+                #             if result.get("stdout"):
+                #                 for line in result["stdout"]:
+                #                     yield f"0:{json.dumps(line)}\n"
+                #         else:
+                #             error_msg = result.get("error", "Unknown error")
+                #             yield f"0:{json.dumps(f'❌ Error: {error_msg}')}\n"
                             
-                    except Exception as e:
-                        error_result = json.dumps({"success": False, "error": str(e)})
-                        stream.submit_tool_call_result(
-                            tool_call_id=tool_call_id,
-                            result=error_result
-                        )
-                        yield f"0:{json.dumps(f'❌ Tool error: {str(e)}')}\n"
+                #     except Exception as e:
+                #         error_result = json.dumps({"success": False, "error": str(e)})
+                #         stream.submit_tool_call_result(
+                #             tool_call_id=tool_call_id,
+                #             result=error_result
+                #         )
+                #         yield f"0:{json.dumps(f'❌ Tool error: {str(e)}')}\n"
 
             # Optional: surface model/tool errors mid-stream
             elif et == "response.error":
