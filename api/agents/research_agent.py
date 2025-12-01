@@ -20,12 +20,11 @@ Workflow:
 """
 
 class ResearchItem(BaseModel):
-    code: str
+    research: str
 
 ResearchAgent = Agent(
     name="research_agent",
     model="gpt-5.1",
-    reasoning={"effort": "none"},
     instructions=PROMPT,
     tools=[WebSearchTool],
     output_type=ResearchItem
