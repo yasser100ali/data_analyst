@@ -32,7 +32,6 @@ class CodeArtifact(BaseModel):
 codingAgent = Agent(
     name="codingAgent",
     model="gpt-5.1",
-    reasoning={"effort": "none"},
     instructions=PROMPT,
     output_type=CodeArtifact
 )
