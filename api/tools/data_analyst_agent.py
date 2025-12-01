@@ -2,10 +2,15 @@ from api.utils.code_execution import DataAnalysisSession
 from dotenv import load_dotenv
 import os
 import re
+import json
 from typing import List, Dict, Any, Optional
+from openai import OpenAI
 
 
 load_dotenv()
+
+# Initialize OpenAI client for the data analyst agent
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
 def extract_python_code(text: str) -> List[str]:
@@ -24,17 +29,65 @@ def extract_python_code(text: str) -> List[str]:
     return [match.strip() for match in matches if match.strip()]
 
 
+def generate_python_code(instructions: str, files: Dict[str, str]) -> str:
+    """
+    Use an LLM to generate Python code based on natural language instructions.
+    
+    Args:
+        instructions: Natural language instructions from orchestrator
+        files: Dictionary of available files in the sandbox
+        
+    Returns:
+        Generated Python code as a string
+    """
+    # Build the system prompt for the code generation agent
+    system_prompt = """You are an expert Python data analyst. Your job is to write Python code to analyze data files.
+
+You will receive:
+1. Natural language instructions about what analysis to perform
+2. A list of available data files in the sandbox
+
+You should:
+- Write complete, executable Python code
+- Use pandas for data manipulation and analysis
+- Include proper error handling
+- Add print statements to show results
+- Use matplotlib or seaborn for visualizations when appropriate
+- Keep code clean and well-commented
+
+Available files in the sandbox:
+{files}
+
+IMPORTANT: 
+- Return ONLY the Python code wrapped in ```python code blocks
+- Do not include explanations outside the code block
+- Files are available in the current directory (no path needed)
+- Always print your results clearly
+""".format(files=json.dumps(list(files.keys()), indent=2))
+
+    # Call the LLM to generate code
+    response = client.chat.completions.create(
+        model="gpt-5.1",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": instructions}
+        ],
+        temperature=0.1,  # Low temperature for consistent code generation
+    )
+    
+    return response.choices[0].message.content
 
 
 def execute_data_analysis(instructions: str, files: Dict[str, str]) -> Dict[str, Any]:
     """
-    Execute data analysis code based on instructions from the orchestrator agent.
-    This is a tool function called by the main agent.
+    Execute data analysis based on natural language instructions from the orchestrator.
+    This function uses an LLM to generate Python code, then executes it in a sandbox.
     
     Args:
-        instructions: Code generation instructions from the main agent
+        instructions: Natural language instructions from the orchestrator agent
+                     e.g., "Write python code to find the most impactful features for 'pts' in nba_seasons.csv"
         files: Dict mapping sandbox filenames to file paths/URLs
-               e.g., {"data.csv": "https://blob.vercel.com/..."}
+               e.g., {"nba_seasons.csv": "https://blob.vercel.com/..."}
     
     Returns:
         Dictionary containing execution results
@@ -44,25 +97,29 @@ def execute_data_analysis(instructions: str, files: Dict[str, str]) -> Dict[str,
     try:
         print(f"📊 Initializing E2B sandbox session...")
         
-        # Initialize sandbox session
+        # Initialize sandbox session with files
         session = DataAnalysisSession()
         session.init_session(files=files)
         print("✓ Session ready")
         
-        print(f"🤖 Processing instructions...")
+        print(f"🤖 Generating Python code from instructions...")
         
-        # Extract Python code from instructions
-        code_blocks = extract_python_code(instructions)
+        # Use LLM to generate Python code from natural language instructions
+        llm_response = generate_python_code(instructions, files)
+        
+        # Extract Python code from LLM response
+        code_blocks = extract_python_code(llm_response)
         
         if not code_blocks:
             return {
                 "success": False,
-                "error": "No executable code found in instructions",
+                "error": "LLM did not generate valid Python code",
                 "stdout": [],
-                "stderr": []
+                "stderr": [],
+                "llm_response": llm_response
             }
         
-        print(f"✓ Found {len(code_blocks)} code block(s) to execute")
+        print(f"✓ Generated {len(code_blocks)} code block(s)")
         
         # Execute each code block
         all_stdout = []

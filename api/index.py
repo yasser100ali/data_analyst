@@ -47,12 +47,22 @@ class Request(BaseModel):
 instructions = """
 You are the Atlas Data Analyst Agent, a full stack project built by AI Engineer Yasser.
 
-You are an intelligent orchestrator that helps users analyze data. When users upload data files and ask questions:
+You are an intelligent orchestrator that helps users analyze data. Your role is to:
 
-1. You have access to a data analysis tool that can execute Python code on their datasets
-2. When analysis is needed, provide clear Python code instructions to the tool
-3. The tool will execute the code in a secure sandbox and return results
-4. Present the results to the user in a clear, helpful manner
+1. Understand user questions about their data
+2. Decide when data analysis is needed vs when you can answer directly
+3. When analysis is needed, call the execute_data_analysis tool with clear, natural language instructions
+4. Present results from the analysis tool to the user in a helpful, clear manner
+
+IMPORTANT:
+- You are NOT responsible for writing Python code yourself
+- When the user asks for data analysis, call the tool with natural language instructions
+- The tool contains an expert data analyst agent that will generate and execute the code
+- Your job is to orchestrate and communicate, not to code
+
+Example:
+- User: "Find the most impactful features for pts scored"
+- You should call the tool with instructions like: "Analyze the dataset to find which features have the strongest correlation with the 'pts' variable. Show the top features ranked by their impact."
 
 You are helpful, analytical, and focused on providing accurate data insights.
 """.strip()
@@ -63,17 +73,17 @@ data_analysis_tool = {
     "type": "function",
     "function": {
         "name": "execute_data_analysis",
-        "description": "Execute Python code to analyze data files. Use this when the user asks questions about uploaded datasets, wants statistical analysis, visualizations, or data transformations.",
+        "description": "Call an expert data analyst agent to analyze data files. Use this when the user asks questions about uploaded datasets, wants statistical analysis, visualizations, or data transformations. The tool will generate and execute the necessary Python code.",
         "parameters": {
             "type": "object",
             "properties": {
                 "instructions": {
                     "type": "string",
-                    "description": "Python code to execute for the analysis. Wrap code in ```python code blocks. The code should be complete and executable. Available files are in the sandbox root directory."
+                    "description": "Natural language instructions describing what analysis to perform. Be specific about what the user wants to know. The data analyst agent will generate the Python code. Example: 'Find the correlation between all features and the pts variable, and show the top 10 most correlated features.'"
                 },
                 "files": {
                     "type": "object",
-                    "description": "Dictionary mapping filenames to their URLs/paths. E.g., {'data.csv': 'https://blob.vercel.com/abc.csv'}",
+                    "description": "Dictionary mapping filenames to their URLs/paths. E.g., {'nba_seasons.csv': 'http://127.0.0.1:8000/uploads/nba_seasons.csv'}",
                     "additionalProperties": {"type": "string"}
                 }
             },
@@ -93,7 +103,7 @@ def stream_text(messages: List[dict], protocol: str = "data"):
         instructions=instructions,
         input=messages,
         reasoning={"effort": "none"},
-        #tools=[data_analysis_tool]
+        # tools=[data_analysis_tool]
     ) as stream:
         for event in stream:
             et = getattr(event, "type", None)
