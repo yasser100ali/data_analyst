@@ -114,49 +114,7 @@ def stream_text(messages: List[dict], protocol: str = "data"):
             if et == "response.output_text.delta":
                 yield "0:{text}\n".format(text=json.dumps(event.delta))
 
-            # Handle tool calls
-            elif et == "response.tool_call.start":
-                tool_call_id = getattr(event, "tool_call_id", "")
-                function_name = getattr(event, "function_name", "")
-                yield f"0:{json.dumps(f'🔧 Calling tool: {function_name}...')}\n"
-            
-            elif et == "response.tool_call.arguments.done":
-                # Tool arguments are complete - execute the tool
-                tool_call_id = getattr(event, "tool_call_id", "")
-                function_name = getattr(event, "function_name", "")
-                arguments = getattr(event, "arguments", "{}")
-                
-                # if function_name == "execute_data_analysis":
-                #     try:
-                #         args = json.loads(arguments)
-                #         result = execute_data_analysis(
-                #             instructions=args.get("instructions", ""),
-                #             files=args.get("files", {})
-                #         )
-                        
-                #         # Submit tool result back to the model
-                #         stream.submit_tool_call_result(
-                #             tool_call_id=tool_call_id,
-                #             result=json.dumps(result)
-                #         )
-                        
-                #         # Stream the execution results to user
-                #         if result.get("success"):
-                #             yield f"0:{json.dumps('✅ Analysis completed!')}\n"
-                #             if result.get("stdout"):
-                #                 for line in result["stdout"]:
-                #                     yield f"0:{json.dumps(line)}\n"
-                #         else:
-                #             error_msg = result.get("error", "Unknown error")
-                #             yield f"0:{json.dumps(f'❌ Error: {error_msg}')}\n"
-                            
-                #     except Exception as e:
-                #         error_result = json.dumps({"success": False, "error": str(e)})
-                #         stream.submit_tool_call_result(
-                #             tool_call_id=tool_call_id,
-                #             result=error_result
-                #         )
-                #         yield f"0:{json.dumps(f'❌ Tool error: {str(e)}')}\n"
+
 
             # Optional: surface model/tool errors mid-stream
             elif et == "response.error":
