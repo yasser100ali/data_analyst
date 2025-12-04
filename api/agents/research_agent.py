@@ -19,13 +19,3 @@ Workflow:
 4. End with a brief "Next steps" section when relevant.
 """
 
-class ResearchItem(BaseModel):
-    research: str
-
-ResearchAgent = Agent(
-    name="research_agent",
-    model="gpt-5.1",
-    instructions=PROMPT,
-    tools=[WebSearchTool],
-    output_type=ResearchItem
-)

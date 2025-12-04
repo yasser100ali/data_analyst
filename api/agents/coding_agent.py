@@ -45,7 +45,7 @@ def get_response(query):
     python_code_str = extract_python(response)
     return python_code_str
 
-def execute_code(query, files_to_upload):
+def codingAgent(query, files_to_upload):
     python_string = get_response(query)
     session = DataAnalysisSession()
     session.init_session(files=files_to_upload)

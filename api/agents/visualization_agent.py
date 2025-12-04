@@ -29,14 +29,3 @@ plt.show()
 ```
 """
 
-
-class CodeArtifact(BaseModel):
-    code: str
-
-
-VisualizationAgent = Agent(
-    name="visualization_agent",
-    model="gpt-5.1",
-    instructions=PROMPT,
-    output_type=CodeArtifact,
-)
