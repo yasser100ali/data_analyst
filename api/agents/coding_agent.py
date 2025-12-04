@@ -33,7 +33,7 @@ print(df.head())
 class CodeArtifact(BaseModel):
     code: str
 
-def get_response(query):
+def get_python_response(query: str) -> str:
     response = client.responses.create(
         model="gpt-5.1",
         instructions=PROMPT,
@@ -42,11 +42,11 @@ def get_response(query):
     )
 
     # extract python extracts python portion of LLM output using regex -> outputs as string
-    python_code_str = extract_python(response)
-    return python_code_str
+    python_code_string = extract_python(response)
+    return python_code_string
 
-def codingAgent(query, files_to_upload):
-    python_string = get_response(query)
+def coding_agent(query, files_to_upload):
+    python_string = get_python_response(query)
     session = DataAnalysisSession()
     session.init_session(files=files_to_upload)
     stdout, stderr = session.execute_code(python_string)

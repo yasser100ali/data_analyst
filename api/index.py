@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages
-from .agents.coding_agent import codingAgent
+from .agents.coding_agent import coding_agent 
 #from .agents.research_agent import ResearchAgent
 
 import shutil
@@ -69,31 +69,7 @@ Example:
 You are helpful, analytical, and focused on providing accurate data insights.
 """.strip()
 
-
-# Define the data analysis tool for the agent
-data_analysis_tool = {
-    "type": "function",
-    "function": {
-        "name": "execute_data_analysis",
-        "description": "Call an expert data analyst agent to analyze data files. Use this when the user asks questions about uploaded datasets, wants statistical analysis, visualizations, or data transformations. The tool will generate and execute the necessary Python code.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "instructions": {
-                    "type": "string",
-                    "description": "Natural language instructions describing what analysis to perform. Be specific about what the user wants to know. The data analyst agent will generate the Python code. Example: 'Find the correlation between all features and the pts variable, and show the top 10 most correlated features.'"
-                },
-                "files": {
-                    "type": "object",
-                    "description": "Dictionary mapping filenames to their URLs/paths. E.g., {'nba_seasons.csv': 'http://127.0.0.1:8000/uploads/nba_seasons.csv'}",
-                    "additionalProperties": {"type": "string"}
-                }
-            },
-            "required": ["instructions", "files"]
-        }
-    }
-}
-
+tools = []
 
 def stream_text(messages: List[dict], protocol: str = "data"):
     # Pick a valid model. Examples: "gpt-5.1" (reasoning) or "gpt-4o-mini" (fast/cheap)
@@ -105,7 +81,7 @@ def stream_text(messages: List[dict], protocol: str = "data"):
         instructions=instructions,
         input=messages,
         reasoning={"effort": "none"},
-        # tools=[data_analysis_tool]
+        tools=tools
     ) as stream:
         for event in stream:
             et = getattr(event, "type", None)
