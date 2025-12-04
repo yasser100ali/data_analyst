@@ -93,65 +93,75 @@ tools = [
 def stream_text(messages: List[dict], files_dict: dict = None):
     # Pick a valid model. Examples: "gpt-5.1" (reasoning) or "gpt-4o-mini" (fast/cheap)
     model_name = "gpt-5.1"
+    input_list = messages.copy()
 
-    # Stream with tools enabled
-    with client.responses.stream(
-        model=model_name,
-        instructions=instructions,
-        input=messages,
-        reasoning={"effort": "none"},
-        tools=tools
-    ) as stream:
-        for event in stream:
-            et = getattr(event, "type", None)
+    max_iteration = 5
+    iteration = 0
+    final_response = None
+    while iteration < max_iteration:
+        has_function_call = False 
+        # Stream with tools enabled
+        with client.responses.stream(
+            model=model_name,
+            instructions=instructions,
+            input=messages,
+            reasoning={"effort": "none"},
+            tools=tools
+        ) as stream:
+            for event in stream:
+                et = getattr(event, "type", None)
+                print(f"EVENT TYPE: {et}", flush=True)
+                # Stream plain text deltas
+                if et == "response.output_text.delta":
+                    yield "0:{text}\n".format(text=json.dumps(event.delta))
 
-            # Stream plain text deltas
-            if et == "response.output_text.delta":
-                yield "0:{text}\n".format(text=json.dumps(event.delta))
+                # Optional: surface model/tool errors mid-stream
+                elif et == "response.error":
+                    print(f"❌ ERROR: {event}", flush=True)
+                    err = getattr(event, "error", {}) or {}
+                    msg = err.get("message", "unknown error")
+                    yield 'e:{{"finishReason":"error","message":{msg}}}\n'.format(
+                        msg=json.dumps(msg)
+                    )
 
-            elif et == "response.tool_call":
-                tool_call = event.tool_call
-                # Check the tool name attribute (not the object itself)
-                if tool_call.name == "coding_agent":
-                    print("Calling Coding Agent!")
-                    args = json.loads(tool_call.arguments)
-                    # Extract "query" parameter (matches tool definition)
-                    analysis_query = args.get("query")
-                    # Call coding_agent with query and files dict
-                    stdout, stderr = coding_agent(analysis_query, files_dict)
-                    # Stream the results back
-                    result_text = "\n".join(stdout) if stdout else ""
-                    if stderr:
-                        result_text += "\n\nErrors:\n" + "\n".join(stderr)
-                    
-                    yield "0:{text}\n".format(text=json.dumps(result_text))
-                    
-            # Optional: surface model/tool errors mid-stream
-            elif et == "response.error":
-                err = getattr(event, "error", {}) or {}
-                msg = err.get("message", "unknown error")
-                yield 'e:{{"finishReason":"error","message":{msg}}}\n'.format(
-                    msg=json.dumps(msg)
-                )
+            # When the stream completes, you can fetch the final structured response
+            final = stream.get_final_response()
+            input_list += final_response.output
+            # function calls 
+            for item in final_response.output:
+                if item.type == "function_call":
+                    has_function_call = True 
+                    if item.name == "coding_agent":
+                        args = json.loads(item.arguments)
+                        analysis_query = args.get("query")
+                        
+                        stdout, stderr = coding_agent(analysis_query, files_dict)
+                        
+                        result_text = "\n".join(stdout) if stdout else ""
+                        if stderr:
+                            result_text += "\n\nErrors:\n" + "\n".join(stderr)
+                        
+                        # Add function result to input for next iteration
+                        input_list.append({
+                            "type": "function_call_output",
+                            "call_id": item.call_id,
+                            "output": result_text
+                        })
+            if not has_function_call:
+                break 
 
-        # When the stream completes, you can fetch the final structured response
-        final = stream.get_final_response()
-
-        # Usage fields are on the final response (when available)
-        usage = getattr(final, "usage", None)
-        # The Responses API reports tokens typically as input_tokens/output_tokens
-        prompt_tokens = getattr(usage, "input_tokens", None) if usage else None
-        completion_tokens = getattr(usage, "output_tokens", None) if usage else None
-
-        # Send your terminal event line (no tools here)
-        yield 'e:{{"finishReason":"stop","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
-            prompt=json.dumps(prompt_tokens),
-            completion=json.dumps(completion_tokens),
-        )
-
-
-
-
+        if final_response:
+            usage = getattr(final, "usage", None)
+            # The Responses API reports tokens typically as input_tokens/output_tokens
+            prompt_tokens = getattr(usage, "input_tokens", None) if usage else None
+            completion_tokens = getattr(usage, "output_tokens", None) if usage else None
+            
+            # Send your terminal event line (no tools here)
+            yield 'e:{{"finishReason":"stop","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
+                prompt=json.dumps(prompt_tokens),
+                completion=json.dumps(completion_tokens),
+            )
+    
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
     file_location = f"api/uploads/{file.filename}"
@@ -167,13 +177,17 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.post("/api/chat")
 async def handle_chat_data(request: Request):
+    print("\n🚀 /api/chat endpoint hit!", flush=True)
     messages = request.messages
+    print(f"📨 Received {len(messages)} messages", flush=True)
     
     # Extract uploaded files from message attachments
     files_dict = extract_files_from_messages(messages)
+    print(f"📁 Extracted {len(files_dict)} files: {list(files_dict.keys())}", flush=True)
     
     # Convert to OpenAI format
     openai_messages = convert_to_openai_messages(messages)
+    print(f"✅ Converted to {len(openai_messages)} OpenAI messages", flush=True)
 
     response = StreamingResponse(stream_text(openai_messages, files_dict))
     response.headers['x-vercel-ai-data-stream'] = 'v1'
