@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from e2b_code_interpreter import Sandbox
 import requests
+import re 
+from typing import Optional 
 
 load_dotenv()
 api_key = os.environ.get("E2B_API_KEY")
@@ -66,6 +68,13 @@ class DataAnalysisSession:
             print("✓ Session closed")
 
 
+def extract_python(code_str:str) -> Optional[str]:
+    PYTHON_FENCE = re.compile(
+        r"```python\s*\n(.*?)```",
+        flags=re.DOTALL | re.IGNORECASE
+    )
+    match = PYTHON_FENCE.seach(code_str)
+    return match.group(1).strip() if match else None
 
 
 # Example usage

@@ -1,6 +1,10 @@
-from agents import Agent 
-
+from openai import OpenAI
 from pydantic import BaseModel
+from dotenv import load_dotenv
+from ..utils.code_execution import DataAnalysisSession
+
+load_dotenv() 
+client = OpenAI() 
 
 PROMPT = """
 You are Atlas' dedicated Python coding agent.
@@ -29,9 +33,17 @@ print(df.head())
 class CodeArtifact(BaseModel):
     code: str
 
-codingAgent = Agent(
-    name="codingAgent",
-    model="gpt-5.1",
-    instructions=PROMPT,
-    output_type=CodeArtifact
-)
+def get_response(query):
+    response = client.responses.create(
+        model="gpt-5.1",
+        instructions=PROMPT,
+        input=query,
+        reasoning={"effort": "none"},
+    )
+
+    
+
+    return response
+
+def execute_code(response):
+print(get_response("hi there what do you do?").output_text)
