@@ -1,7 +1,7 @@
 from openai import OpenAI
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from ..utils.code_execution import DataAnalysisSession
+from ..utils.code_execution import DataAnalysisSession, extract_python
 
 load_dotenv() 
 client = OpenAI() 
@@ -41,9 +41,15 @@ def get_response(query):
         reasoning={"effort": "none"},
     )
 
-    
+    # extract python extracts python portion of LLM output using regex -> outputs as string
+    python_code_str = extract_python(response)
+    return python_code_str
 
-    return response
+def execute_code(query, files_to_upload):
+    python_string = get_response(query)
+    session = DataAnalysisSession()
+    session.init_session(files=files_to_upload)
+    stdout, stderr = session.execute_code(python_string)
+    session.close()
 
-def execute_code(response):
-print(get_response("hi there what do you do?").output_text)
+    return (stdout, stderr)
