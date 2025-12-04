@@ -4,7 +4,7 @@ from typing import List, Optional
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query, UploadFile, File
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -110,8 +110,18 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                 yield "0:{text}\n".format(text=json.dumps(event.delta))
 
             elif et == "response.tool_call":
-                yield ""
-
+                tool_call = event.tool_call
+                if tool_call == "coding_agent":
+                    args = json.loads(tool_call.arguments)
+                    analysis_query = args.get("analysis_instructions")
+                    stdout, stderr = coding_agent(query=analysis_query, files_to_upload=files_dict or {})
+                    # Stream the results back
+                    result_text = "\n".join(stdout) if stdout else ""
+                    if stderr:
+                        result_text += "\n\nErrors:\n" + "\n".join(stderr)
+                    
+                    yield "0:{text}\n".format(text=json.dumps(result_text))
+                    
             # Optional: surface model/tool errors mid-stream
             elif et == "response.error":
                 err = getattr(event, "error", {}) or {}
@@ -152,10 +162,15 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @app.post("/api/chat")
-async def handle_chat_data(request: Request, protocol: str = Query('data')):
+async def handle_chat_data(request: Request):
     messages = request.messages
+    
+    # Extract uploaded files from message attachments
+    files_dict = extract_files_from_messages(messages)
+    
+    # Convert to OpenAI format
     openai_messages = convert_to_openai_messages(messages)
 
-    response = StreamingResponse(stream_text(openai_messages, protocol))
+    response = StreamingResponse(stream_text(openai_messages, files_dict))
     response.headers['x-vercel-ai-data-stream'] = 'v1'
     return response
