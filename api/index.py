@@ -74,24 +74,23 @@ You are helpful, analytical, and focused on providing accurate data insights.
 tools = [
     {
         "type": "function",
-        "function": {
-            "name": "coding_agent",
-            "description": "Write and execute Python code to analyze data based on user instructions.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The natural language instruction for the analysis (e.g. 'Calculate average points per game')"
-                    }
-                },
-                "required": ["query"]
-            }
+        "name": "coding_agent",
+        "description": "Write and execute Python code to analyze data based on user instructions.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The natural language instruction for the analysis (e.g. 'Calculate average points per game')"
+                }
+            },
+            "required": ["query"]
+        
         }
     }
 ]
 
-def stream_text(messages: List[dict], protocol: str = "data"):
+def stream_text(messages: List[dict], files_dict: dict = None):
     # Pick a valid model. Examples: "gpt-5.1" (reasoning) or "gpt-4o-mini" (fast/cheap)
     model_name = "gpt-5.1"
 
@@ -110,7 +109,8 @@ def stream_text(messages: List[dict], protocol: str = "data"):
             if et == "response.output_text.delta":
                 yield "0:{text}\n".format(text=json.dumps(event.delta))
 
-
+            elif et == "response.tool_call":
+                yield ""
 
             # Optional: surface model/tool errors mid-stream
             elif et == "response.error":
