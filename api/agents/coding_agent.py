@@ -45,10 +45,10 @@ def get_python_response(query: str) -> str:
     python_code_string = extract_python(response)
     return python_code_string
 
-def coding_agent(query, files_to_upload):
+def coding_agent(query, files_to_upload: dict = None):
     python_string = get_python_response(query)
     session = DataAnalysisSession()
-    session.init_session(files=files_to_upload)
+    session.init_session(files=files_to_upload or {})
     stdout, stderr = session.execute_code(python_string)
     session.close()
 

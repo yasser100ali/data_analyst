@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import base64
 from typing import List, Optional
 from pydantic import BaseModel
-
+import os 
 
 class ClientAttachment(BaseModel):
     name: str
@@ -47,3 +47,25 @@ def convert_to_openai_messages(messages: List[ClientMessage]) -> List[dict]:
         })
 
     return openai_messages 
+
+
+# Add helper function to extract files from messages
+def extract_files_from_messages(messages: List[ClientMessage]) -> dict:
+    """
+    Extract uploaded files from message attachments.
+    Returns dict mapping filename to local path.
+    """
+    files = {}
+    for message in messages:
+        if message.experimental_attachments:
+            for attachment in message.experimental_attachments:
+                # Check if it's a CSV or data file
+                if attachment.contentType in ['text/csv', 'application/vnd.ms-excel']:
+                    # Extract filename from URL (e.g., "http://127.0.0.1:8000/uploads/file.csv")
+                    filename = attachment.name
+                    local_path = f"api/uploads/{filename}"
+                    
+                    # Verify file exists locally
+                    if os.path.exists(local_path):
+                        files[filename] = local_path
+    return files

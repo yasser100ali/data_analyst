@@ -9,12 +9,13 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
-from .utils.prompt import ClientMessage, convert_to_openai_messages
+from .utils.prompt import ClientMessage, convert_to_openai_messages, extract_files_from_messages
 from .agents.coding_agent import coding_agent 
 #from .agents.research_agent import ResearchAgent
 
 import shutil
 import os
+import glob 
 
 load_dotenv()
 
@@ -53,7 +54,7 @@ You are an intelligent orchestrator that helps users analyze data. Your role is 
 
 1. Understand user questions about their data
 2. Decide when data analysis is needed vs when you can answer directly
-3. When analysis is needed, call the execute_data_analysis tool with clear, natural language instructions
+3. When analysis is needed, call the coding_agent tool with clear, natural language instructions
 4. Present results from the analysis tool to the user in a helpful, clear manner
 
 IMPORTANT:
@@ -69,7 +70,26 @@ Example:
 You are helpful, analytical, and focused on providing accurate data insights.
 """.strip()
 
-tools = []
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "coding_agent",
+            "description": "Write and execute Python code to analyze data based on user instructions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The natural language instruction for the analysis (e.g. 'Calculate average points per game')"
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    }
+]
 
 def stream_text(messages: List[dict], protocol: str = "data"):
     # Pick a valid model. Examples: "gpt-5.1" (reasoning) or "gpt-4o-mini" (fast/cheap)
