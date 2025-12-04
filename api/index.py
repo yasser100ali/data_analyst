@@ -111,10 +111,14 @@ def stream_text(messages: List[dict], files_dict: dict = None):
 
             elif et == "response.tool_call":
                 tool_call = event.tool_call
-                if tool_call == "coding_agent":
+                # Check the tool name attribute (not the object itself)
+                if tool_call.name == "coding_agent":
+                    print("Calling Coding Agent!")
                     args = json.loads(tool_call.arguments)
-                    analysis_query = args.get("analysis_instructions")
-                    stdout, stderr = coding_agent(query=analysis_query, files_to_upload=files_dict or {})
+                    # Extract "query" parameter (matches tool definition)
+                    analysis_query = args.get("query")
+                    # Call coding_agent with query and files dict
+                    stdout, stderr = coding_agent(analysis_query, files_dict)
                     # Stream the results back
                     result_text = "\n".join(stdout) if stdout else ""
                     if stderr:
