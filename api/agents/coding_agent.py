@@ -55,6 +55,11 @@ def _response_to_text(response) -> str:
     return "".join(chunks)
 
 def get_python_response(query: str) -> str:
+    # If files were uploaded, give the model a clear hint to read them locally
+    # instead of trying to fetch from localhost/HTTP (which fails inside the sandbox).
+    if query and isinstance(query, str):
+        pass  # placeholder to keep original query unmodified below
+
     response = client.responses.create(
         model="gpt-5.1",
         instructions=PROMPT,
@@ -71,13 +76,23 @@ def get_python_response(query: str) -> str:
     return python_code_string
 
 def coding_agent(query, files_to_upload: dict = None):
+    # When files are provided, append guidance so the model reads local copies.
+    if files_to_upload:
+        file_list = ", ".join(files_to_upload.keys())
+        query = (
+            f"{query}\n\nYou already have these files locally in the working "
+            f"directory: {file_list}. Read them directly by filename (do not "
+            f"try to download via localhost URLs)."
+        )
+
     python_string = get_python_response(query)
     session = DataAnalysisSession()
     session.init_session(files=files_to_upload or {})
     stdout, stderr = session.execute_code(python_string)
     print(f"LLM Answer given code: \n{python_string}")
     print("-" * 40)
-    print(stdout)
+    print("STDOUT:", stdout)
+    print("STDERR:", stderr)
     print("-" * 40)
     session.close()
 
