@@ -33,6 +33,27 @@ print(df.head())
 class CodeArtifact(BaseModel):
     code: str
 
+def _response_to_text(response) -> str:
+    """
+    Normalize the Responses API object into a plain string.
+    Falls back to walking the output list if output_text is missing.
+    """
+    if response is None:
+        return ""
+
+    output_text = getattr(response, "output_text", None)
+    if output_text:
+        return output_text
+
+    chunks = []
+    for output in getattr(response, "output", []) or []:
+        for content in getattr(output, "content", []) or []:
+            text_part = getattr(content, "text", None)
+            if text_part:
+                chunks.append(text_part)
+
+    return "".join(chunks)
+
 def get_python_response(query: str) -> str:
     response = client.responses.create(
         model="gpt-5.1",
@@ -41,9 +62,12 @@ def get_python_response(query: str) -> str:
         reasoning={"effort": "none"},
     )
     
-    response_text = getattr(response, "output_text", None)
-    # extract python extracts python portion of LLM output using regex -> outputs as string
-    python_code_string = extract_python(response_text)
+    response_text = _response_to_text(response)
+    python_code_string = extract_python(response_text or "")
+
+    if not python_code_string:
+        raise ValueError("Model response did not include a Python code block.")
+
     return python_code_string
 
 def coding_agent(query, files_to_upload: dict = None):

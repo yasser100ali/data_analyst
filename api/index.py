@@ -103,7 +103,7 @@ def stream_text(messages: List[dict], files_dict: dict = None):
         with client.responses.stream(
             model=model_name,
             instructions=instructions,
-            input=messages,
+            input=input_list,
             reasoning={"effort": "none"},
             tools=tools
         ) as stream:
@@ -146,22 +146,22 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                             "call_id": item.call_id,
                             "output": result_text
                         })
-            if not has_function_call:
-                break 
-            
-            iteration += 1
+        if not has_function_call:
+            break 
 
-        if final_response:
-            usage = getattr(final_response, "usage", None)
-            # The Responses API reports tokens typically as input_tokens/output_tokens
-            prompt_tokens = getattr(usage, "input_tokens", None) if usage else None
-            completion_tokens = getattr(usage, "output_tokens", None) if usage else None
-            
-            # Send your terminal event line (no tools here)
-            yield 'e:{{"finishReason":"stop","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
-                prompt=json.dumps(prompt_tokens),
-                completion=json.dumps(completion_tokens),
-            )
+        iteration += 1
+
+    if final_response:
+        usage = getattr(final_response, "usage", None)
+        # The Responses API reports tokens typically as input_tokens/output_tokens
+        prompt_tokens = getattr(usage, "input_tokens", None) if usage else None
+        completion_tokens = getattr(usage, "output_tokens", None) if usage else None
+        
+        # Send your terminal event line (no tools here)
+        yield 'e:{{"finishReason":"stop","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
+            prompt=json.dumps(prompt_tokens),
+            completion=json.dumps(completion_tokens),
+        )
     
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
