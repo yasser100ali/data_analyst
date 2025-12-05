@@ -96,4 +96,4 @@ def coding_agent(query, files_to_upload: dict = None):
     print("-" * 40)
     session.close()
 
-    return (stdout, stderr)
+    return (stdout, stderr, python_string)

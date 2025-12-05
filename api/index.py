@@ -136,11 +136,14 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                         args = json.loads(item.arguments)
                         analysis_query = args.get("query")
                         
-                        stdout, stderr = coding_agent(analysis_query, files_dict)
+                        stdout, stderr, python_code = coding_agent(analysis_query, files_dict)
                         
                         result_text = "\n".join(stdout) if stdout else ""
                         if stderr:
                             result_text += "\n\nErrors:\n" + "\n".join(stderr)
+                        
+                        # Include the code in the result for the orchestrator
+                        result_text += f"\n\n[CODE_BLOCK]\n{python_code}\n[/CODE_BLOCK]"
                         
                         # Add function result to input for next iteration
                         input_list.append({
