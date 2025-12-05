@@ -33,6 +33,7 @@ app.add_middleware(
         "http://localhost:3000",  # Local development
         "http://127.0.0.1:3000",  # Local development (loopback)
         "https://dataanalyst-zeta.vercel.app",  # Production frontend
+        "https://atlasanalyst.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
