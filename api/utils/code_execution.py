@@ -73,7 +73,7 @@ def extract_python(code_str:str) -> Optional[str]:
         r"```python\s*\n(.*?)```",
         flags=re.DOTALL | re.IGNORECASE
     )
-    match = PYTHON_FENCE.seach(code_str)
+    match = PYTHON_FENCE.search(code_str)
     return match.group(1).strip() if match else None
 
 

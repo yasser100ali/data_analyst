@@ -40,9 +40,10 @@ def get_python_response(query: str) -> str:
         input=query,
         reasoning={"effort": "none"},
     )
-
+    
+    response_text = getattr(response, "output_text", None)
     # extract python extracts python portion of LLM output using regex -> outputs as string
-    python_code_string = extract_python(response)
+    python_code_string = extract_python(response_text)
     return python_code_string
 
 def coding_agent(query, files_to_upload: dict = None):
@@ -50,6 +51,10 @@ def coding_agent(query, files_to_upload: dict = None):
     session = DataAnalysisSession()
     session.init_session(files=files_to_upload or {})
     stdout, stderr = session.execute_code(python_string)
+    print(f"LLM Answer given code: \n{python_string}")
+    print("-" * 40)
+    print(stdout)
+    print("-" * 40)
     session.close()
 
     return (stdout, stderr)

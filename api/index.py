@@ -97,7 +97,6 @@ def stream_text(messages: List[dict], files_dict: dict = None):
 
     max_iteration = 5
     iteration = 0
-    final_response = None
     while iteration < max_iteration:
         has_function_call = False 
         # Stream with tools enabled
@@ -125,7 +124,7 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                     )
 
             # When the stream completes, you can fetch the final structured response
-            final = stream.get_final_response()
+            final_response = stream.get_final_response()
             input_list += final_response.output
             # function calls 
             for item in final_response.output:
@@ -149,9 +148,11 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                         })
             if not has_function_call:
                 break 
+            
+            iteration += 1
 
         if final_response:
-            usage = getattr(final, "usage", None)
+            usage = getattr(final_response, "usage", None)
             # The Responses API reports tokens typically as input_tokens/output_tokens
             prompt_tokens = getattr(usage, "input_tokens", None) if usage else None
             completion_tokens = getattr(usage, "output_tokens", None) if usage else None
