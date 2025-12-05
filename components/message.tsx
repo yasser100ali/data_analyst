@@ -7,23 +7,6 @@ import { Markdown } from "./markdown";
 import { PreviewAttachment } from "./preview-attachment";
 import { cn } from "@/lib/utils";
 import { Weather } from "./weather";
-import { CodeDisplay } from "./code-display";
-
-// Extract code blocks from message content
-const extractCodeBlocks = (content: string): { content: string; codeBlocks: string[] } => {
-  const codeBlockRegex = /\[CODE_BLOCK\]\n([\s\S]*?)\n\[\/CODE_BLOCK\]/g;
-  const codeBlocks: string[] = [];
-  let match;
-
-  while ((match = codeBlockRegex.exec(content)) !== null) {
-    codeBlocks.push(match[1]);
-  }
-
-  // Remove code block markers from content
-  const cleanedContent = content.replace(codeBlockRegex, "").trim();
-
-  return { content: cleanedContent, codeBlocks };
-};
 
 export const PreviewMessage = ({
   message,
@@ -32,10 +15,6 @@ export const PreviewMessage = ({
   message: Message;
   isLoading: boolean;
 }) => {
-  const { content, codeBlocks } = message.content 
-    ? extractCodeBlocks(message.content as string)
-    : { content: "", codeBlocks: [] };
-
   return (
     <motion.div
       className="w-full mx-auto max-w-3xl px-4 group/message"
@@ -60,17 +39,9 @@ export const PreviewMessage = ({
             </div>
           )}
 
-          {content && (
+          {message.content && (
             <div className="flex flex-col gap-4">
-              <Markdown>{content}</Markdown>
-            </div>
-          )}
-
-          {codeBlocks.length > 0 && (
-            <div className="flex flex-col gap-2 mt-2">
-              {codeBlocks.map((code, idx) => (
-                <CodeDisplay key={idx} code={code} />
-              ))}
+              <Markdown>{message.content as string}</Markdown>
             </div>
           )}
 

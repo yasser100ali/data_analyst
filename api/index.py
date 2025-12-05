@@ -136,20 +136,30 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                         args = json.loads(item.arguments)
                         analysis_query = args.get("query")
                         
-                        stdout, stderr, python_code = coding_agent(analysis_query, files_dict)
-                        
-                        result_text = "\n".join(stdout) if stdout else ""
+                        stdout, stderr, code_str = coding_agent(analysis_query, files_dict)
+
+                        output_section = "\n".join(stdout) if stdout else ""
                         if stderr:
-                            result_text += "\n\nErrors:\n" + "\n".join(stderr)
-                        
-                        # Include the code in the result for the orchestrator
-                        result_text += f"\n\n[CODE_BLOCK]\n{python_code}\n[/CODE_BLOCK]"
+                            output_section += ("\n\nErrors:\n" if output_section else "Errors:\n") + "\n".join(stderr)
+
+                        # Prepare the tool result for the MODEL context
+                        # We can just use the text output for the model to reason about.
+                        # The model doesn't necessarily need the code repeated back to it in the tool output, 
+                        # but it helps if it needs to debug.
+                        # Let's include code in the context but plain.
+                        result_text_for_context = f"Output:\n{output_section}\n\nCode Executed:\n{code_str}"
+
+                        # Inject the code block into the CLIENT stream
+                        # This makes it appear in the chat UI.
+                        if code_str:
+                            code_block_markdown = f"\n```python\n{code_str}\n```\n\n"
+                            yield '0:{text}\n'.format(text=json.dumps(code_block_markdown))
                         
                         # Add function result to input for next iteration
                         input_list.append({
                             "type": "function_call_output",
                             "call_id": item.call_id,
-                            "output": result_text
+                            "output": result_text_for_context
                         })
         if not has_function_call:
             break 
