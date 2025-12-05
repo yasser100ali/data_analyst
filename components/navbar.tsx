@@ -45,6 +45,15 @@ export const Navbar = () => {
         {showUpdates && (
           <div className="absolute right-0 top-10 z-50 w-80 rounded-md border border-cyan-900/40 bg-background/95 backdrop-blur shadow-lg p-3 text-xs font-mono space-y-3">
             <div>
+              <div className="font-semibold text-foreground">December 4</div>
+              <p className="text-foreground/70">
+                Data Analyst Agent now functioning safely. Code is executed in a
+                safe environment (E2B provides isolated cloud sandboxes for running
+                untrusted code). Next step: optimize speed and improve the UI while
+                the user waits for the agent to respond.
+              </p>
+            </div>
+            <div>
               <div className="font-semibold text-foreground">November 30</div>
               <p className="text-foreground/70">
                 Building agent orchestration using the OpenAI Agents SDK to

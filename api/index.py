@@ -31,6 +31,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Local development
+        "http://127.0.0.1:3000",  # Local development (loopback)
         "https://dataanalyst-zeta.vercel.app",  # Production frontend
     ],
     allow_credentials=True,
@@ -190,6 +191,10 @@ async def handle_chat_data(request: Request):
     openai_messages = convert_to_openai_messages(messages)
     print(f"✅ Converted to {len(openai_messages)} OpenAI messages", flush=True)
 
-    response = StreamingResponse(stream_text(openai_messages, files_dict))
+    response = StreamingResponse(
+        stream_text(openai_messages, files_dict),
+        media_type="text/plain",
+    )
     response.headers['x-vercel-ai-data-stream'] = 'v1'
+    response.headers['Cache-Control'] = 'no-cache'
     return response
