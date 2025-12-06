@@ -6,7 +6,13 @@ import { motion } from "framer-motion";
 import { Markdown } from "./markdown";
 import { PreviewAttachment } from "./preview-attachment";
 import { cn } from "@/lib/utils";
-import { Weather } from "./weather";
+const OrbitSpinner = () => (
+  <div className="relative h-7 w-7" aria-hidden="true">
+    <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/30" />
+    <div className="absolute inset-[3px] rounded-full border-[3px] border-primary/70 border-t-transparent border-l-transparent animate-spin [animation-duration:1.1s]" />
+    <div className="absolute inset-[9px] rounded-full bg-primary/80" />
+  </div>
+);
 
 export const PreviewMessage = ({
   message,
@@ -49,28 +55,26 @@ export const PreviewMessage = ({
             <div className="flex flex-col gap-4">
               {message.toolInvocations.map((toolInvocation) => {
                 const { toolName, toolCallId, state } = toolInvocation;
+                const agentLabel = toolName || "coding_agent";
 
                 if (state === "result") {
                   const { result } = toolInvocation;
 
                   return (
                     <div key={toolCallId}>
-                      {toolName === "get_current_weather" ? (
-                        <Weather weatherAtLocation={result} />
-                      ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
-                      )}
+                      <pre>{JSON.stringify(result, null, 2)}</pre>
                     </div>
                   );
                 }
                 return (
                   <div
                     key={toolCallId}
-                    className={cn({
-                      skeleton: ["get_current_weather"].includes(toolName),
-                    })}
+                    className="flex items-center gap-3 text-muted-foreground"
                   >
-                    {toolName === "get_current_weather" ? <Weather /> : null}
+                    <OrbitSpinner />
+                    <span className="text-sm font-medium">
+                      Calling {agentLabel}
+                    </span>
                   </div>
                 );
               })}
@@ -103,11 +107,7 @@ export const ThinkingMessage = () => {
         <div className="flex flex-col gap-2 w-full">
           <div className="flex flex-row items-center gap-3 text-muted-foreground">
             <span className="sr-only">Assistant is thinking</span>
-            <div className="relative h-7 w-7">
-              <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/30" />
-              <div className="absolute inset-[3px] rounded-full border-[3px] border-primary/70 border-t-transparent border-l-transparent animate-spin [animation-duration:1.1s]" />
-              <div className="absolute inset-[9px] rounded-full bg-primary/80" />
-            </div>
+            <OrbitSpinner />
           </div>
         </div>
       </div>

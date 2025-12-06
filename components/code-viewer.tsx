@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Highlight,
+  themes,
+  type Language,
+  type RenderProps,
+  type Token,
+} from "prism-react-renderer";
 import { Check, Copy, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -69,10 +76,48 @@ export function CodeViewer({ language, code }: CodeViewerProps) {
 
       {/* Content */}
       {isExpanded && (
-        <div className="relative bg-zinc-950 p-4 overflow-x-auto">
-          <pre className="text-sm font-mono text-zinc-50">
-            <code>{code}</code>
-          </pre>
+        <div className="relative overflow-x-auto">
+          <Highlight
+            theme={themes.vsDark}
+            code={code || ""}
+            language={(language || "tsx") as Language}
+          >
+            {({
+              className,
+              style,
+              tokens,
+              getLineProps,
+              getTokenProps,
+            }: RenderProps) => (
+              <pre
+                className={cn(
+                  "m-0 bg-zinc-950 p-4 text-sm font-mono",
+                  className,
+                )}
+                style={style}
+              >
+                {tokens.map((line: Token[], lineIndex: number) => (
+                  <div
+                    key={lineIndex}
+                    {...getLineProps({ line })}
+                    className="table-row"
+                  >
+                    <span className="table-cell select-none pr-4 text-right text-xs text-muted-foreground/70">
+                      {lineIndex + 1}
+                    </span>
+                    <span className="table-cell">
+                      {line.map((token: Token, tokenIndex: number) => (
+                        <span
+                          key={tokenIndex}
+                          {...getTokenProps({ token })}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </pre>
+            )}
+          </Highlight>
         </div>
       )}
     </div>
