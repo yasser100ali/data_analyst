@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   Highlight,
@@ -75,8 +76,19 @@ export function CodeViewer({ language, code }: CodeViewerProps) {
       </div>
 
       {/* Content */}
-      {isExpanded && (
-        <div className="relative overflow-x-auto">
+      <motion.div
+        initial={false}
+        animate={
+          isExpanded
+            ? { height: "auto", opacity: 1 }
+            : { height: 0, opacity: 0 }
+        }
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        className="relative overflow-hidden"
+        aria-hidden={!isExpanded}
+        style={{ pointerEvents: isExpanded ? "auto" : "none" }}
+      >
+        <div className="overflow-x-auto">
           <Highlight
             theme={themes.vsDark}
             code={code || ""}
@@ -119,7 +131,7 @@ export function CodeViewer({ language, code }: CodeViewerProps) {
             )}
           </Highlight>
         </div>
-      )}
+      </motion.div>
     </div>
   );
 }

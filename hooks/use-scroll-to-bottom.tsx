@@ -12,15 +12,25 @@ export function useScrollToBottom<T extends HTMLElement>(): [
     const end = endRef.current;
 
     if (container && end) {
+      const shouldAutoScroll = () => {
+        const distanceFromBottom =
+          container.scrollHeight - container.clientHeight - container.scrollTop;
+        return distanceFromBottom < 120; // only auto-scroll when user is near bottom
+      };
+
       const observer = new MutationObserver(() => {
-        end.scrollIntoView({ behavior: "auto", block: "end" });
+        // Only scroll when new nodes are added and the user is near the bottom.
+        if (!shouldAutoScroll()) return;
+        requestAnimationFrame(() => {
+          end.scrollIntoView({ behavior: "auto", block: "end" });
+        });
       });
 
       observer.observe(container, {
         childList: true,
         subtree: true,
-        attributes: true,
-        characterData: true,
+        attributes: false,
+        characterData: false,
       });
 
       return () => observer.disconnect();
