@@ -580,22 +580,22 @@ export function MultimodalInput({
 
       <div
         className={cn(
-          "relative flex w-full rounded-2xl border border-border/60 bg-muted/50 transition-all hover:border-border",
-          isDragOver && "bg-primary/20 border-primary/40"
+          "relative flex w-full rounded-xl border border-border/70 bg-background/80 backdrop-blur-sm transition-colors focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/25 hover:border-border",
+          isDragOver && "bg-primary/5 border-primary/50"
         )}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <div className="flex w-full p-4 pr-14 pb-14">
+        <div className="flex w-full p-3.5 pr-14 pb-12">
           <Textarea
             ref={textareaRef}
             placeholder="Send a message..."
             value={input}
             onChange={handleInput}
             className={cn(
-              "min-h-[80px] max-h-[calc(75dvh)] w-full resize-none border-none bg-transparent !text-base shadow-none focus-visible:ring-0 pt-0 pl-0 pr-0 pb-0",
+              "min-h-[64px] max-h-[45dvh] w-full resize-none border-none bg-transparent !text-[0.98rem] leading-relaxed font-mono shadow-none focus-visible:ring-0 pt-0 pl-0 pr-0 pb-0",
               className
             )}
             rows={3}
@@ -618,7 +618,7 @@ export function MultimodalInput({
         <Button
           variant="ghost"
           size="icon"
-          className="absolute bottom-3 left-3 flex-shrink-0 h-9 w-9"
+          className="absolute bottom-3 left-3 flex-shrink-0 h-9 w-9 rounded-lg border border-border/70 bg-transparent shadow-none hover:bg-border/20 transition-colors"
           onClick={handleAttachClick}
         >
           <Paperclip className="h-5 w-5" />
@@ -627,7 +627,7 @@ export function MultimodalInput({
 
         {isLoading ? (
           <Button
-            className="absolute bottom-3 right-3 rounded-full p-2 h-9 w-9 flex-shrink-0"
+            className="absolute bottom-3 right-3 rounded-lg p-0 h-10 w-10 flex-shrink-0 border border-border/70 bg-muted shadow-none hover:bg-muted/80 transition-colors"
             onClick={(event) => {
               event.preventDefault();
               stop();
@@ -638,7 +638,7 @@ export function MultimodalInput({
           </Button>
         ) : (
           <Button
-            className="absolute bottom-3 right-3 rounded-full p-2 h-9 w-9 flex-shrink-0"
+            className="absolute bottom-3 right-3 rounded-lg p-0 h-10 w-10 flex-shrink-0 border border-border/70 bg-primary text-primary-foreground shadow-none hover:bg-primary/90 transition-colors"
             onClick={(event) => {
               event.preventDefault();
               submitForm();
