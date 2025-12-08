@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from ..utils.code_execution import DataAnalysisSession, extract_python
 from ..utils.prompt import _response_to_text
 
+# this agent will also be responsible for creating charts and visuals when they seem needed. 
+
 load_dotenv() 
 client = OpenAI() 
 
@@ -29,6 +31,8 @@ import pandas as pd
 df = pd.read_csv("nba_seasons.csv")
 print(df.head())
 ```
+
+Your job is also to generate charts using matplotlib when they seem helpful. 
 """
 
 class CodeArtifact(BaseModel):
@@ -67,6 +71,8 @@ def coding_agent(query, files_to_upload: dict = None):
             f"try to download via localhost URLs)."
         )
 
+
+    # this may be inefficient creating a new session every time you execute -> look into better solution 
     python_string = get_python_response(query)
     session = DataAnalysisSession()
     session.init_session(files=files_to_upload or {})
