@@ -11,7 +11,7 @@ const updates = [
   {
     date: "November 30",
     description:
-      "Added agent orchestration with the OpenAI Agents SDK to route questions between the chat model and the analysis tools, with streamed responses from the orchestrator.",
+      "Built custom orchestration on the OpenAI Responses API to route questions between the chat model and the analysis tools, with streamed responses from the orchestrator.",
   },
   {
     date: "November 29",
@@ -64,12 +64,17 @@ export default function AboutPage() {
         </h2>
         <ul className="list-disc pl-5 space-y-2 text-foreground/80 leading-relaxed">
           <li>
-            Frontend: Next.js App Router with TypeScript, Tailwind, framer-motion,
-            and streaming UI components for chat and file uploads.
+            Backend: FastAPI with a custom agentic architecture built on the
+            OpenAI Responses API.
           </li>
           <li>
-            Backend: FastAPI with the OpenAI Agents SDK for orchestration, using
-            a Python tool that executes code inside isolated E2B sandboxes.
+            Execution: E2B sandboxes isolate generated Python instead of running
+            exec() locally, preventing arbitrary file/system access and keeping
+            runs ephemeral and auditable.
+          </li>
+          <li>
+            Frontend: Next.js App Router with TypeScript, Tailwind, framer-motion,
+            and streaming UI components for chat and file uploads.
           </li>
           <li>
             Storage & assets: Vercel Blob for uploads, with signed URLs passed to
