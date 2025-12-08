@@ -33,7 +33,7 @@ def research_agent(query: str) -> str:
         reasoning={"effort": "none"},
         instructions=PROMPT,
         input=query,
-        tools={"type": "web_search_preview"}
+        tools=[{"type": "web_search_preview"}],
     )
 
     response_string = _response_to_text(response)
