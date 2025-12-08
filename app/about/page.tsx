@@ -1,0 +1,115 @@
+import { motion } from "framer-motion";
+
+const updates = [
+  {
+    date: "December 4",
+    description:
+      "Data Analyst Agent now functioning safely. Code runs inside isolated E2B sandboxes with a persistent session. Next up: optimizing speed and improving the UI while the agent thinks.",
+  },
+  {
+    date: "November 30",
+    description:
+      "Added agent orchestration with the OpenAI Agents SDK to route questions between the chat model and the analysis tools, with streamed responses from the orchestrator.",
+  },
+  {
+    date: "November 29",
+    description:
+      "Built the Python execution sandbox in code_execution.py using the E2B code interpreter so generated code runs securely and reuses a shared DataAnalysisSession.",
+  },
+  {
+    date: "November 28",
+    description:
+      "Enabled file uploads for PDF, Excel, and CSV. Files are stored in blob storage and exposed to the sandbox via signed URLs so the analysis layer can read them directly.",
+  },
+];
+
+const roadmap = [
+  "Speed up end-to-end responses (model choice, batching, smarter tool calls).",
+  "Improve the waiting experience with clearer status, retries, and inline progress.",
+  "Richer data ingest: automatic schema detection, sampling, and validation on upload.",
+  "Deeper analysis helpers: profiling, chart suggestions, and reusable notebooks.",
+];
+
+export default function AboutPage() {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-10 md:py-16 space-y-10">
+      <div className="space-y-3">
+        <h1 className="text-4xl md:text-5xl font-mono font-bold tracking-wider text-foreground">
+          ABOUT ATLAS
+        </h1>
+        <p className="text-foreground/70 leading-relaxed max-w-3xl">
+          Atlas exists to make exploratory analysis feel instant: upload data,
+          ask questions, and get grounded answers with runnable Python instead
+          of static chat. The goal is a safe, iterative loop where you can see,
+          edit, and rerun what the agent produces.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-mono tracking-wider text-cyan-300">
+          MOTIVATION
+        </h2>
+        <p className="text-foreground/80 leading-relaxed">
+          Traditional chat-first UIs often hallucinate or hide the work. Atlas
+          keeps analysis transparent: every step is executed in a sandboxed
+          Python runtime, streamed back to the UI, and tied to your files so you
+          can quickly validate, correct, and iterate.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-mono tracking-wider text-cyan-300">
+          TECH STACK
+        </h2>
+        <ul className="list-disc pl-5 space-y-2 text-foreground/80 leading-relaxed">
+          <li>
+            Frontend: Next.js App Router with TypeScript, Tailwind, framer-motion,
+            and streaming UI components for chat and file uploads.
+          </li>
+          <li>
+            Backend: FastAPI with the OpenAI Agents SDK for orchestration, using
+            a Python tool that executes code inside isolated E2B sandboxes.
+          </li>
+          <li>
+            Storage & assets: Vercel Blob for uploads, with signed URLs passed to
+            the sandbox so analysis can read user data directly.
+          </li>
+        </ul>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-mono tracking-wider text-cyan-300">
+          UPDATES
+        </h2>
+        <div className="space-y-3">
+          {updates.map((update) => (
+            <motion.div
+              key={update.date}
+              className="rounded-md border border-cyan-900/40 bg-background/60 p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="font-semibold text-foreground">{update.date}</div>
+              <p className="text-foreground/70 mt-1 leading-relaxed">
+                {update.description}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-mono tracking-wider text-cyan-300">
+          ROADMAP
+        </h2>
+        <ul className="list-disc pl-5 space-y-2 text-foreground/80 leading-relaxed">
+          {roadmap.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
