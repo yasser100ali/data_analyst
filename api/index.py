@@ -89,21 +89,9 @@ tools = [
             "required": ["query"]
         
         }
-    },
+    }, 
     {
-        "type": "function",
-        "name": "research_agent",
-        "description": "Allows for real time web research to find relevant information and research. Also used when outside data is necessary.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "The natural language instruction for the analysis (e.g. 'Calculate average points per game')"
-                }
-            },
-            "required": ["query"]
-        }
+        "type": "web_search_preview"
     }
 ]
 
