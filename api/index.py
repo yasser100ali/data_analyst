@@ -190,6 +190,7 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                             "call_id": item.call_id,
                             "output": research_result
                         })
+                        
         if not has_function_call:
             break 
 
