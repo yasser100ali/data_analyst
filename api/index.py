@@ -77,7 +77,7 @@ tools = [
     {
         "type": "function",
         "name": "coding_agent",
-        "description": "Write and execute Python code to analyze data based on user instructions.",
+        "description": "Write and execute Python code to analyze data based on user instructions. Use when python coding tool would be beneficial (calculating difficult equation) or when data analysis is required.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -92,7 +92,7 @@ tools = [
     },
     {
         "type": "function",
-        "name": "research_agent":
+        "name": "research_agent",
         "description": "Allows for real time web research to find relevant information and research. Also used when outside data is necessary.",
         "parameters": {
             "type": "object",
