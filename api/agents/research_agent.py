@@ -1,5 +1,11 @@
-from agents import Agent, WebSearchTool
+from openai import OpenAI 
+from openai.types.shared import reasoning_effort
 from pydantic import BaseModel
+from ..utils.prompt import _response_to_text
+from dotenv import load_dotenv
+
+load_dotenv()
+client = OpenAI()
 
 PROMPT = """
 You are Atlas' Research Agent with real-time web search access.
@@ -18,4 +24,19 @@ Workflow:
 3. Combine findings into a final answer with bullet points / short paragraphs.
 4. End with a brief "Next steps" section when relevant.
 """
+
+
+def get_response(query: str) -> str:
+
+    response = client.responses.create(
+        model="gpt-5.1",
+        reasoing={"effort": "none"},
+        instructions=PROMPT,
+        input=query,
+        tools={"type": "web_search_preview"}
+    )
+
+    response_string = _response_to_text(response)
+
+    return response_string
 
