@@ -1,3 +1,5 @@
+ "use client";
+
 import { motion } from "framer-motion";
 
 const updates = [
@@ -24,10 +26,9 @@ const updates = [
 ];
 
 const roadmap = [
-  "Speed up end-to-end responses (model choice, batching, smarter tool calls).",
-  "Improve the waiting experience with clearer status, retries, and inline progress.",
-  "Richer data ingest: automatic schema detection, sampling, and validation on upload.",
-  "Deeper analysis helpers: profiling, chart suggestions, and reusable notebooks.",
+  "Ship a research_agent browsing prototype wired into the chat flow.",
+  "Support live data retrieval and pass fetched data into the analysis sandbox.",
+  "Expand coding_agent outputs with default matplotlib charts for quantitative answers.",
 ];
 
 export default function AboutPage() {
@@ -101,7 +102,7 @@ export default function AboutPage() {
 
       <div className="space-y-4">
         <h2 className="text-xl font-mono tracking-wider text-cyan-300">
-          ROADMAP
+          GOALS · DEC 8–14
         </h2>
         <ul className="list-disc pl-5 space-y-2 text-foreground/80 leading-relaxed">
           {roadmap.map((item) => (
