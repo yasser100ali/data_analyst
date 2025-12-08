@@ -136,8 +136,8 @@ export default function AboutPage() {
         </h2>
         <div className="text-foreground/80 leading-relaxed space-y-3">
           <p>
-            Hi, I'm Yasser, a full stack AI engineer focused on agentic workflows and RAG
-            systems for data teams. I love building practical AI projects—if you're interested
+            Hi, I am Yasser, a full stack AI engineer focused on agentic workflows and RAG
+            systems for data teams. I love building practical and awesome AI projects. If you are interested
             in collaborating, please shoot an email.
           </p>
           <div className="flex flex-wrap gap-3 pt-2 text-sm">
