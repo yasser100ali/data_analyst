@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+
+import type { Message } from "ai";
 import { PreviewMessage, ThinkingMessage } from "@/components/message";
 import { MultimodalInput } from "@/components/multimodal-input";
 import { Overview } from "@/components/overview";
@@ -26,7 +29,7 @@ export function Chat() {
   } = useChat({
     api: `${backendUrl}/api/chat`,
     maxSteps: 4,
-    onError: (error) => {
+    onError: (error: Error) => {
       if (error.message.includes("Too many requests")) {
         toast.error(
           "You are sending too many messages. Please try again later.",
@@ -38,6 +41,17 @@ export function Chat() {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
+  // Always jump to the bottom when a new user prompt is added
+  useEffect(() => {
+    if (!messages.length) return;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== "user") return;
+    const endEl = messagesEndRef.current;
+    if (endEl) {
+      endEl.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages, messagesEndRef]);
+
   return (
     <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)] bg-background">
       <div
@@ -46,7 +60,7 @@ export function Chat() {
       >
         {messages.length === 0 && <Overview />}
 
-        {messages.map((message, index) => (
+        {messages.map((message: Message, index: number) => (
           <PreviewMessage
             key={message.id}
             chatId={chatId}

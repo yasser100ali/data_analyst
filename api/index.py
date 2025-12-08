@@ -147,10 +147,10 @@ def stream_text(messages: List[dict], files_dict: dict = None):
             for item in final_response.output:
                 if item.type == "function_call":
                     has_function_call = True 
-                    if item.name == "coding_agent":
-                        args = json.loads(item.arguments)
-                        analysis_query = args.get("query")
+                    args = json.loads(item.arguments)
+                    analysis_query = args.get("query")
                         
+                    if item.name == "coding_agent":
                         stdout, stderr, code_str = coding_agent(analysis_query, files_dict)
 
                         output_section = "\n".join(stdout) if stdout else ""
@@ -177,8 +177,6 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                             "output": result_text_for_context
                         })
                     if item.name == "research_agent":
-                        args = json.loads(item.arguments)
-                        analysis_query = args.get("query")
                         research_result = research_agent(analysis_query)
                         # Add function result to input for next iteration
                         input_list.append({
