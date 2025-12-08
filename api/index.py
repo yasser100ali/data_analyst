@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages, extract_files_from_messages
 from .agents.coding_agent import coding_agent 
-#from .agents.research_agent import ResearchAgent
+from .agents.research_agent import research_agent
 
 import shutil
 import os
@@ -88,6 +88,21 @@ tools = [
             },
             "required": ["query"]
         
+        }
+    },
+    {
+        "type": "function",
+        "name": "research_agent":
+        "description": "Allows for real time web research to find relevant information and research. Also used when outside data is necessary.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The natural language instruction for the analysis (e.g. 'Calculate average points per game')"
+                }
+            },
+            "required": ["query"]
         }
     }
 ]

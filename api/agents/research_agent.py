@@ -26,7 +26,7 @@ Workflow:
 """
 
 
-def get_response(query: str) -> str:
+def research_agent(query: str) -> str:
 
     response = client.responses.create(
         model="gpt-5.1",
