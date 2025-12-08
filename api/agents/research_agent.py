@@ -30,7 +30,7 @@ def research_agent(query: str) -> str:
 
     response = client.responses.create(
         model="gpt-5.1",
-        reasoing={"effort": "none"},
+        reasoning={"effort": "none"},
         instructions=PROMPT,
         input=query,
         tools={"type": "web_search_preview"}
