@@ -69,3 +69,24 @@ def extract_files_from_messages(messages: List[ClientMessage]) -> dict:
                     if os.path.exists(local_path):
                         files[filename] = local_path
     return files
+
+def _response_to_text(response) -> str:
+    """
+    Normalize the Responses API object into a plain string.
+    Falls back to walking the output list if output_text is missing.
+    """
+    if response is None:
+        return ""
+
+    output_text = getattr(response, "output_text", None)
+    if output_text:
+        return output_text
+
+    chunks = []
+    for output in getattr(response, "output", []) or []:
+        for content in getattr(output, "content", []) or []:
+            text_part = getattr(content, "text", None)
+            if text_part:
+                chunks.append(text_part)
+
+    return "".join(chunks)
