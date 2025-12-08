@@ -180,10 +180,6 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                         args = json.loads(item.arguments)
                         analysis_query = args.get("query")
                         research_result = research_agent(analysis_query)
-                        # Surface research result to the client stream
-                        if research_result:
-                            yield '0:{text}\n'.format(text=json.dumps(research_result))
-
                         # Add function result to input for next iteration
                         input_list.append({
                             "type": "function_call_output",
