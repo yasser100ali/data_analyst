@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import { Markdown } from "./markdown";
 import { PreviewAttachment } from "./preview-attachment";
+import { SourcesViewer } from "./sources-viewer";
 import { cn } from "@/lib/utils";
 const OrbitSpinner = () => (
   <div className="relative h-7 w-7" aria-hidden="true">
@@ -21,6 +22,30 @@ export const PreviewMessage = ({
   message: Message;
   isLoading: boolean;
 }) => {
+  const extractSources = (raw?: string) => {
+    if (!raw) return { content: raw ?? "", sources: [] };
+    const detailsRegex = /<details>\s*<summary>\s*Sources\s*<\/summary>\s*([\s\S]*?)<\/details>/i;
+    const match = raw.match(detailsRegex);
+    if (!match) return { content: raw, sources: [] };
+    const inside = match[1] || "";
+
+    // Extract URLs from markdown list (- [text](url)) or bare URLs
+    const linkRegex = /\[[^\]]*?\]\((https?:\/\/[^\s)]+)\)|\bhttps?:\/\/[^\s<>")]+/g;
+    const sources: string[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = linkRegex.exec(inside))) {
+      const url = m[1] || m[0];
+      if (url && !sources.includes(url)) sources.push(url);
+    }
+
+    const content = raw.replace(detailsRegex, "").trim();
+    return { content, sources };
+  };
+
+  const { content: cleanedContent, sources } = extractSources(
+    typeof message.content === "string" ? message.content : undefined,
+  );
+
   return (
     <motion.div
       className="w-full mx-auto max-w-3xl px-4 group/message"
@@ -45,11 +70,13 @@ export const PreviewMessage = ({
             </div>
           )}
 
-          {message.content && (
+          {cleanedContent && (
             <div className="flex flex-col gap-4">
-              <Markdown>{message.content as string}</Markdown>
+              <Markdown>{cleanedContent}</Markdown>
             </div>
           )}
+
+          {sources && sources.length > 0 && <SourcesViewer sources={sources} />}
 
           {message.toolInvocations && message.toolInvocations.length > 0 && (
             <div className="flex flex-col gap-4">
