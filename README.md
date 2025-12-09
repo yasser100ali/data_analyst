@@ -9,10 +9,10 @@ Open Source Data Analyst Agent
 
 The centerpiece of this project is an intelligent agent that:
 
-- 📊 **Auto-extracts metadata** from data files (shape, columns, types, statistics)
-- 🤖 **Generates analysis code** using OpenAI GPT-4
-- ⚡ **Executes code securely** in E2B sandbox environment
-- 📈 **Returns insights** with explanations and visualizations
+-  **Auto-extracts metadata** from data files (shape, columns, types, statistics)
+-  **Generates analysis code** using OpenAI GPT-5.1 
+-  **Executes code securely** in E2B sandbox environment
+-  **Returns insights** with explanations and visualizations
 
 ### Quick Agent Usage
 
@@ -33,15 +33,15 @@ agent.close()
 examples.py
 ```
 
-## ✨ Features
+##  Features
 
-- **📁 File Upload Support**: Drag & drop CSV, Excel, PDF, and text files for analysis
-- **🔄 Real-time Streaming**: Powered by OpenAI's Responses API for fast, responsive interactions
-- **📊 Data Analysis**: Analyze datasets, generate insights, and create visualizations
-- **🌐 Multi-platform Deployment**: Optimized for both Vercel and Railway hosting
-- **🎨 Modern UI**: Beautiful, responsive interface with dark mode support
+- ** File Upload Support**: Drag & drop CSV, Excel, PDF, and text files for analysis
+- ** Real-time Streaming**: Powered by OpenAI's Responses API for fast, responsive interactions
+- ** Data Analysis**: Analyze datasets, generate insights, and create visualizations
+- ** Multi-platform Deployment**: Optimized for both Vercel and Railway hosting
+- ** Modern UI**: Beautiful, responsive interface with dark mode support
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -92,7 +92,7 @@ pnpm run fastapi-dev
 pnpm run dev
 ```
 
-## 📁 File Upload Support
+##  File Upload Support
 
 Users can upload and analyze:
 - **CSV files** (`.csv`) - 10MB max
@@ -107,7 +107,7 @@ Users can upload and analyze:
 3. **Analysis**: Backend processes files and sends to AI for analysis
 4. **Results**: AI provides insights, summaries, and visualizations
 
-## 🚢 Deployment
+##  Deployment
 
 ### Railway (Recommended for ML/Data Science)
 
@@ -139,7 +139,7 @@ vercel --prod
 - `OPENAI_API_KEY`
 - `BLOB_READ_WRITE_TOKEN`
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -152,7 +152,7 @@ vercel --prod
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 **Frontend:**
 - Next.js 13 (App Router)
@@ -166,19 +166,20 @@ vercel --prod
 - OpenAI Responses API
 - Pydantic (data validation)
 - Uvicorn (ASGI server)
+- E2B for safe sandboxed code execution
 
 **AI/ML:**
-- OpenAI GPT-4
+- OpenAI GPT-5.1
 - Responses API (streaming)
 - File processing capabilities
 
-## 📚 Documentation
+##  Documentation
 
 - [File Upload Setup](./FILE_UPLOAD_SETUP.md) - Complete file upload guide
 - [Quick Start](./QUICK_START.md) - Fast setup instructions
 - [Feature Summary](./FEATURE_SUMMARY.md) - Technical overview
 
-## 🎯 Key Capabilities
+##  Key Capabilities
 
 - **Data Analysis**: Upload CSV/Excel files and get AI-powered insights
 - **Document Analysis**: Analyze PDF reports and documents
