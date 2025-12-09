@@ -10,7 +10,7 @@ export const Navbar = () => {
   const router = useRouter();
 
   return (
-    <div className="px-4 py-3 flex flex-row gap-2 justify-between items-center bg-background border-b border-cyan-900/20">
+    <div className="h-14 px-4 flex flex-row gap-2 justify-between items-center bg-background border-b border-cyan-900/20">
       {/* Left: Logo with refresh */}
       <motion.button
         onClick={() => router.push("/")}

@@ -53,10 +53,10 @@ export function Chat() {
   }, [messages, messagesEndRef]);
 
   return (
-    <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)] bg-background">
+    <div className="flex flex-col min-w-0 h-[calc(100dvh-56px)] bg-background overflow-hidden">
       <div
         ref={messagesContainerRef}
-        className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
+        className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-auto pt-4"
       >
         {messages.length === 0 && <Overview />}
 

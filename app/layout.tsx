@@ -42,7 +42,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/favicon.svg" />
       </head>
-      <body className={cn(GeistSans.className, "antialiased dark bg-background")}>
+      <body className={cn(GeistSans.className, "antialiased dark bg-background min-h-screen overflow-y-auto")}>
         <Toaster position="top-center" richColors />
         <Navbar />
         {children}
