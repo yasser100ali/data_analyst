@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Github, Linkedin as LinkedinIcon, Mail } from "lucide-react";
 
 const updates = [
   {
@@ -164,33 +165,35 @@ export default function AboutPage() {
             <button
               type="button"
               onClick={handleCopyEmail}
-              className="inline-flex items-center gap-2 border border-neutral-800 bg-black px-4 py-2 text-neutral-100 uppercase tracking-wide hover:border-neutral-200 hover:bg-neutral-900 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700/70 bg-transparent px-4 py-2 text-neutral-100 hover:border-slate-400 hover:bg-slate-800/40 transition-colors"
             >
+              <Mail className="h-4 w-4" />
               {copied ? "Copied!" : "yasser100ali@gmail.com"}
             </button>
-            <a
-              href="https://linkedin.com/in/yasser-engineer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-neutral-800 bg-black px-4 py-2 text-neutral-100 uppercase tracking-wide hover:border-neutral-200 hover:bg-neutral-900 transition-colors"
-            >
-              LinkedIn
-            </a>
             <a
               href="https://github.com/yasser100ali"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-neutral-800 bg-black px-4 py-2 text-neutral-100 uppercase tracking-wide hover:border-neutral-200 hover:bg-neutral-900 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700/70 bg-transparent px-4 py-2 text-neutral-100 hover:border-slate-400 hover:bg-slate-800/40 transition-colors"
             >
-              GitHub
+              <Github className="h-4 w-4" />
+              Github
+            </a>
+            <a
+              href="https://linkedin.com/in/yasser-engineer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700/70 bg-transparent px-4 py-2 text-neutral-100 hover:border-slate-400 hover:bg-slate-800/40 transition-colors"
+            >
+              Connect on LinkedIn
             </a>
             <a
               href="https://yasser.engineer"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-neutral-800 bg-black px-4 py-2 text-neutral-100 uppercase tracking-wide hover:border-neutral-200 hover:bg-neutral-900 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700/70 bg-transparent px-4 py-2 text-neutral-100 hover:border-slate-400 hover:bg-slate-800/40 transition-colors"
             >
-              Portfolio
+              <span className="font-mono">yasser.engineer</span>
             </a>
           </div>
         </div>
