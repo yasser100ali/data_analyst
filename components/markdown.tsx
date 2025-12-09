@@ -43,6 +43,17 @@ const normalizeMathMarkdown = (input: string): string => {
 };
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
+  // Strip ANSI color codes and other formatting artifacts that might come from AI responses
+  const cleanedChildren = React.useMemo(() => {
+    let cleaned = children;
+    // Remove ANSI color codes (e.g., \x1b[31m for red)
+    cleaned = cleaned.replace(/\x1b\[[0-9;]*m/g, '');
+    // Remove HTML color tags if any
+    cleaned = cleaned.replace(/<span[^>]*color[^>]*>|<\/span>/gi, '');
+    cleaned = cleaned.replace(/<font[^>]*>|<\/font>/gi, '');
+    return cleaned;
+  }, [children]);
+
   const components: Partial<Components> = {
     // @ts-expect-error
     code: ({ node, inline, className, children, ...props }) => {
@@ -199,15 +210,54 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
         </td>
       );
     },
+    p: ({ node, children, ...props }) => {
+      return (
+        <p className="mb-4 leading-7 text-foreground" {...props}>
+          {children}
+        </p>
+      );
+    },
+    em: ({ node, children, ...props }) => {
+      return (
+        <em className="italic text-foreground" {...props}>
+          {children}
+        </em>
+      );
+    },
+    del: ({ node, children, ...props }) => {
+      return (
+        <del className="line-through text-foreground" {...props}>
+          {children}
+        </del>
+      );
+    },
+    blockquote: ({ node, children, ...props }) => {
+      return (
+        <blockquote className="border-l-4 border-muted pl-4 italic my-4 text-muted-foreground" {...props}>
+          {children}
+        </blockquote>
+      );
+    },
+    hr: ({ node, ...props }) => {
+      return <hr className="my-8 border-border" {...props} />;
+    },
   };
 
-  const normalized = React.useMemo(() => normalizeMathMarkdown(children), [children]);
+  const normalized = React.useMemo(() => normalizeMathMarkdown(cleanedChildren), [cleanedChildren]);
 
   return (
-    <div className="prose prose-invert max-w-full break-words whitespace-pre-wrap">
+    <div className="max-w-full break-words text-foreground">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[
+          [rehypeKatex, {
+            strict: false,
+            trust: true,
+            throwOnError: false,
+            errorColor: 'inherit',
+            output: 'html'
+          }]
+        ]}
         components={components}
       >
         {normalized}
