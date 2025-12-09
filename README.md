@@ -1,9 +1,11 @@
-# Atlas Analyst Agent 🤖📊
+# Atlas Analyst Agent 
 
 11/19/2025
 A powerful data analyst AI agent that can analyze CSV, Excel, PDF, and text files through an intuitive chat interface. Built with Next.js, FastAPI, OpenAI, and E2B Code Interpreter.
 
-## 🎯 Core Feature: DataAnalystAgent
+Open Source Data Analyst Agent
+
+## Core Feature: DataAnalystAgent
 
 The centerpiece of this project is an intelligent agent that:
 
@@ -28,14 +30,7 @@ print(result["stdout"])     # Code output
 agent.close()
 ```
 
-### Test the Agent
-
-```bash
-# Run built-in tests
-python test_agent.py
-
-# See all examples
-python examples.py
+examples.py
 ```
 
 ## ✨ Features
