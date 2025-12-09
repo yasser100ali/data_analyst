@@ -45,6 +45,11 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     // Forces double newline before headers/rules if they are stuck to previous text
     str = str.replace(/([^\n])\s*\n\s*(#{1,6}\s|---|___)/g, "$1\n\n$2");
     
+    // 3. Fix Tables (LLM often concatenates rows): turn `| ... | | ... |` into new rows
+    // Heuristic: when a pipe is immediately followed by another pipe (maybe with spaces),
+    // treat that as the start of a new row.
+    str = str.replace(/\|\s*\|\s*(?=[^\n|])/g, "|\n|");
+
     // 3. Fix Tables: Remove blank lines between table rows.
     // In Markdown, a blank line breaks the table. We merge them back.
     // Finds: Pipe -> Newlines -> Pipe, and reduces to single newline.
