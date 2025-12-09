@@ -40,7 +40,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
         // @ts-expect-error
         <pre
           {...props}
-          className={`${className} text-sm w-[80dvw] md:max-w-[500px] overflow-x-scroll bg-zinc-100 p-3 rounded-lg mt-2 dark:bg-zinc-800`}
+          className={`${className} text-sm max-w-full overflow-x-auto bg-zinc-100 p-3 rounded-lg mt-2 dark:bg-zinc-800`}
         >
           <code className={match[1]}>{children}</code>
         </pre>
@@ -185,9 +185,15 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   const normalized = React.useMemo(() => normalizeMathMarkdown(children), [children]);
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={components}>
-      {normalized}
-    </ReactMarkdown>
+    <div className="prose prose-invert max-w-full break-words whitespace-pre-wrap">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={components}
+      >
+        {normalized}
+      </ReactMarkdown>
+    </div>
   );
 };
 
