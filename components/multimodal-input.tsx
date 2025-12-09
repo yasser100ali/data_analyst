@@ -595,7 +595,7 @@ export function MultimodalInput({
             value={input}
             onChange={handleInput}
             className={cn(
-              "min-h-[64px] max-h-[45dvh] w-full resize-none border-none bg-transparent !text-[0.98rem] leading-relaxed font-mono shadow-none focus-visible:ring-0 pt-0 pl-0 pr-0 pb-0",
+              "min-h-[64px] max-h-[45dvh] w-full resize-none border-none bg-transparent !text-[1.12rem] leading-7 font-sans shadow-none focus-visible:ring-0 pt-0 pl-0 pr-0 pb-0 placeholder:!text-[1rem]",
               className
             )}
             rows={3}
