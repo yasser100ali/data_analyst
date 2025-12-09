@@ -17,7 +17,6 @@ const normalizeMathMarkdown = (input: string): string => {
   let output = input;
 
   // 1. Convert display math \[ ... \] to $$ ... $$
-  // We use [\s\S] to match across multiple lines
   output = output.replace(/\\\[([\s\S]+?)\\\]/g, (_, inner) => {
     return `$$\n${inner.trim()}\n$$`;
   });
@@ -28,7 +27,6 @@ const normalizeMathMarkdown = (input: string): string => {
   });
 
   // 3. Ensure distinct block equations (wrapped in $$) are separated by newlines
-  // This helps prevent markdown parsers from merging them with previous text
   output = output.replace(/([^\n])\s*(\$\$[\s\S]+?\$\$)/g, "$1\n\n$2");
 
   return output;
@@ -40,18 +38,22 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   const content = useMemo(() => {
     let str = children || "";
 
-    // 1. Handle literal string "\n" that might come from JSON responses
+    // 1. Handle literal string "\n" (common in LLM JSON responses)
     str = str.replace(/\\n/g, "\n");
 
-    // 2. Fix Formatting: Ensure Headers (##) and Rules (---) are on their own lines.
-    // The regex looks for a non-newline char, followed by optional whitespace/newlines,
-    // followed by a Header or Rule. It forces a double newline (\n\n) between them.
+    // 2. Fix Formatting: Ensure Headers (##) and Rules (---) are on their own lines
+    // Forces double newline before headers/rules if they are stuck to previous text
     str = str.replace(/([^\n])\s*\n\s*(#{1,6}\s|---|___)/g, "$1\n\n$2");
+    
+    // 3. Fix Tables: Remove blank lines between table rows.
+    // In Markdown, a blank line breaks the table. We merge them back.
+    // Finds: Pipe -> Newlines -> Pipe, and reduces to single newline.
+    str = str.replace(/(\|[ \t]*)\n{2,}([ \t]*\|)/g, "$1\n$2");
 
-    // 3. Remove ANSI color codes (e.g. from terminal output)
+    // 4. Remove ANSI color codes
     str = str.replace(/\x1b\[[0-9;]*m/g, "");
 
-    // 4. Normalize Math Delimiters
+    // 5. Normalize Math Delimiters
     str = normalizeMathMarkdown(str);
 
     return str;
@@ -203,7 +205,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     p: ({ node, children, ...props }) => {
       return (
-        <p className="m-0 leading-7 text-foreground" {...props}>
+        <p className="mb-4 leading-7 text-foreground last:mb-0" {...props}>
           {children}
         </p>
       );
@@ -229,7 +231,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
             strict: false,
             trust: true,
             throwOnError: false,
-            output: 'html' // Use HTML output for better accessibility/SSR
+            output: 'html'
           }]
         ]}
         components={components}
