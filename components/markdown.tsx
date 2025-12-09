@@ -1,6 +1,7 @@
 import { CodeViewer } from "./code-viewer";
 import Link from "next/link";
 import React, { memo, useMemo } from "react";
+import type { HTMLAttributes } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -73,8 +74,8 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       
       return !inline ? (
         <pre
-          {...props}
-          className={`${className} text-sm max-w-full overflow-x-auto bg-zinc-100 p-3 rounded-lg mt-4 mb-4 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700`}
+          {...(props as HTMLAttributes<HTMLPreElement>)}
+          className={`${className ?? ""} text-sm max-w-full overflow-x-auto bg-zinc-100 p-3 rounded-lg mt-4 mb-4 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700`}
         >
           <code className={match ? match[1] : ""}>{children}</code>
         </pre>
@@ -202,7 +203,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     p: ({ node, children, ...props }) => {
       return (
-        <p className="mb-4 leading-7 text-foreground" {...props}>
+        <p className="m-0 leading-7 text-foreground" {...props}>
           {children}
         </p>
       );
