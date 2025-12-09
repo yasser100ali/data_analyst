@@ -73,8 +73,14 @@ export function SourcesViewer({ sources, title = "Sources", className }: Sources
                   const parts = u.pathname.split("/").filter(Boolean);
                   if (!parts.length) return null;
                   const last = decodeURIComponent(parts[parts.length - 1]);
-                  const cleaned = last.replace(/[-_]+/g, " ").trim();
-                  return cleaned ? cleaned : null;
+                  // replace dashes/underscores with spaces
+                  const spaced = last.replace(/[-_]+/g, " ").trim();
+                  // remove any token that looks like it has an extension (.html, .htm, .php, .asp, .aspx)
+                  const tokens = spaced
+                    .split(/\s+/)
+                    .filter((t) => !/\.(html?|php|asp|aspx)$/i.test(t));
+                  const cleaned = tokens.join(" ").trim();
+                  return cleaned || null;
                 } catch {
                   return null;
                 }
