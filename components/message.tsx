@@ -27,15 +27,32 @@ export const PreviewMessage = ({
     const detailsRegex = /<details>\s*<summary>\s*Sources\s*<\/summary>\s*([\s\S]*?)<\/details>/i;
     const match = raw.match(detailsRegex);
     if (!match) return { content: raw, sources: [] };
+
     const inside = match[1] || "";
 
-    // Extract URLs from markdown list (- [text](url)) or bare URLs
-    const linkRegex = /\[[^\]]*?\]\((https?:\/\/[^\s)]+)\)|\bhttps?:\/\/[^\s<>")]+/g;
-    const sources: string[] = [];
-    let m: RegExpExecArray | null;
-    while ((m = linkRegex.exec(inside))) {
-      const url = m[1] || m[0];
-      if (url && !sources.includes(url)) sources.push(url);
+    // Look for a JSON block inside ```json ... ```
+    const jsonBlockRegex = /```json\s*([\s\S]*?)```/i;
+    const jsonMatch = inside.match(jsonBlockRegex);
+    let sources: { url: string; title?: string | null }[] = [];
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[1]);
+        if (Array.isArray(parsed)) {
+          sources = parsed
+            .filter((x) => x && typeof x === "object" && x.url)
+            .map((x) => ({ url: x.url, title: x.title ?? undefined }));
+        }
+      } catch {
+        // ignore parse errors
+      }
+    } else {
+      // Fallback: extract URLs from markdown
+      const linkRegex = /\[[^\]]*?\]\((https?:\/\/[^\s)]+)\)|\bhttps?:\/\/[^\s<>")]+/g;
+      let m: RegExpExecArray | null;
+      while ((m = linkRegex.exec(inside))) {
+        const url = m[1] || m[0];
+        if (url && !sources.some((s) => s.url === url)) sources.push({ url });
+      }
     }
 
     const content = raw.replace(detailsRegex, "").trim();

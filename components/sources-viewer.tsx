@@ -6,8 +6,13 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+interface SourceItem {
+  url: string;
+  title?: string | null;
+}
+
 interface SourcesViewerProps {
-  sources: string[];
+  sources: SourceItem[];
   title?: string;
   className?: string;
 }
@@ -52,29 +57,47 @@ export function SourcesViewer({ sources, title = "Sources", className }: Sources
         style={{ pointerEvents: isExpanded ? "auto" : "none" }}
       >
         <div className="p-4 space-y-2">
-          <ul className="list-disc list-outside pl-5 space-y-1">
-            {sources.map((url, idx) => {
-              let label = url;
+          <div className="flex flex-col gap-3">
+            {sources.map((source, idx) => {
+              const url = source.url;
+              let host = url;
               try {
                 const u = new URL(url);
-                label = u.hostname.replace(/^www\./, "");
+                host = u.hostname.replace(/^www\./, "");
               } catch {
                 // keep original url if parsing fails
               }
+              const cleanPathTitle = () => {
+                try {
+                  const u = new URL(url);
+                  const parts = u.pathname.split("/").filter(Boolean);
+                  if (!parts.length) return null;
+                  const last = decodeURIComponent(parts[parts.length - 1]);
+                  const cleaned = last.replace(/[-_]+/g, " ").trim();
+                  return cleaned ? cleaned : null;
+                } catch {
+                  return null;
+                }
+              };
+              const title = (source.title && source.title.trim()) || cleanPathTitle() || host;
               return (
-                <li key={`${url}-${idx}`} className="break-words">
+                <div
+                  key={`${url}-${idx}`}
+                  className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 shadow-sm"
+                >
+                  <div className="text-xs text-muted-foreground mb-1">{host}</div>
                   <a
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                    className="text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-colors block"
                   >
-                    {label}
+                    {title}
                   </a>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         </div>
       </motion.div>
     </div>

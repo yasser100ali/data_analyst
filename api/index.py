@@ -131,21 +131,32 @@ def stream_text(messages: List[dict], files_dict: dict = None):
             # When the stream completes, you can fetch the final structured response
             final_response = stream.get_final_response()
             # Collect any web_search citations into a Sources dropdown
-            sources = set()
+            sources = []
             for output in getattr(final_response, "output", []) or []:
                 for content in getattr(output, "content", []) or []:
                     for ann in getattr(content, "annotations", []) or []:
                         if getattr(ann, "type", None) == "url_citation":
                             url = getattr(ann, "url", None)
+                            title = getattr(ann, "title", None)
                             if url:
-                                sources.add(url)
+                                sources.append({"url": url, "title": title})
+            # Deduplicate by URL preserving first title
+            deduped = []
+            seen = set()
+            for s in sources:
+                if s["url"] in seen:
+                    continue
+                seen.add(s["url"])
+                deduped.append(s)
             if sources:
+                sources_json = json.dumps(deduped)
                 sources_md = (
                     "<details><summary>Sources</summary>\n\n"
-                    + "\n".join(f"- [{u}]({u})" for u in sorted(sources))
-                    + "\n</details>\n"
+                    "```json\n"
+                    f"{sources_json}\n"
+                    "```\n"
+                    "</details>\n"
                 )
-                # Emit as a normal markdown message so the client renders a dropdown
                 yield "0:{text}\n".format(text=json.dumps(sources_md))
             input_list += final_response.output
             # function calls 
