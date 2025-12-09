@@ -1,82 +1,86 @@
 import { CodeViewer } from "./code-viewer";
 import Link from "next/link";
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 
+/**
+ * Normalizes different LaTeX formats into standard $ and $$ delimiters
+ * for remark-math to process correctly.
+ */
 const normalizeMathMarkdown = (input: string): string => {
+  if (!input) return "";
   let output = input;
-  
-  // Convert block lines like: [ ...latex... ] → $$ ... $$ so KaTeX renders
-  output = output.replace(/^\s*\[(.+?)\]\s*$/gm, (fullMatch, inner) => {
-    const content = String(inner).trim();
-    if (/\\[a-zA-Z]+|[\^_]/.test(content)) {
-      return `$$\n${content}\n$$`;
-    }
-    return fullMatch;
+
+  // 1. Convert display math \[ ... \] to $$ ... $$
+  // We use [\s\S] to match across multiple lines
+  output = output.replace(/\\\[([\s\S]+?)\\\]/g, (_, inner) => {
+    return `$$\n${inner.trim()}\n$$`;
   });
-  
-  // Convert escaped TeX display delimiters \[ ... \] → $$ ... $$
-  output = output.replace(/\\\[(.+?)\\\]/gs, (_m, inner) => `$$\n${inner}\n$$`);
-  
-  // Convert escaped inline delimiters \( ... \) → $...$
-  output = output.replace(/\\\((.+?)\\\)/g, (_m, inner) => `$${inner}$`);
-  
-  // Handle lines that are primarily LaTeX (start with backslash commands, contain math symbols)
-  // but aren't already wrapped in $ delimiters
-  output = output.replace(/^([^\$\n]*)(\\[a-zA-Z]+[^\n]+)$/gm, (fullMatch, prefix, latexPart) => {
-    // Skip if already in math mode or if it's part of a code block
-    if (fullMatch.includes('$') || fullMatch.includes('```')) {
-      return fullMatch;
-    }
-    // If the line starts with LaTeX commands or contains significant LaTeX, wrap it
-    if (/^\\[a-zA-Z]+/.test(latexPart.trim()) || /\\[a-zA-Z]+.*[\\_{}\^]/.test(latexPart)) {
-      return prefix + '$' + latexPart.trim() + '$';
-    }
-    return fullMatch;
+
+  // 2. Convert inline math \( ... \) to $ ... $
+  output = output.replace(/\\\(([\s\S]+?)\\\)/g, (_, inner) => {
+    return `$${inner.trim()}$`;
   });
-  
+
+  // 3. Ensure distinct block equations (wrapped in $$) are separated by newlines
+  // This helps prevent markdown parsers from merging them with previous text
+  output = output.replace(/([^\n])\s*(\$\$[\s\S]+?\$\$)/g, "$1\n\n$2");
+
   return output;
 };
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
-  // Strip ANSI color codes and other formatting artifacts that might come from AI responses
-  const cleanedChildren = React.useMemo(() => {
-    let cleaned = children;
-    // Remove ANSI color codes (e.g., \x1b[31m for red)
-    cleaned = cleaned.replace(/\x1b\[[0-9;]*m/g, '');
-    // Remove HTML color tags if any
-    cleaned = cleaned.replace(/<span[^>]*color[^>]*>|<\/span>/gi, '');
-    cleaned = cleaned.replace(/<font[^>]*>|<\/font>/gi, '');
-    return cleaned;
+  
+  // Clean and prepare the content before passing to the parser
+  const content = useMemo(() => {
+    let str = children || "";
+
+    // 1. Handle literal string "\n" that might come from JSON responses
+    str = str.replace(/\\n/g, "\n");
+
+    // 2. Fix Formatting: Ensure Headers (##) and Rules (---) are on their own lines.
+    // The regex looks for a non-newline char, followed by optional whitespace/newlines,
+    // followed by a Header or Rule. It forces a double newline (\n\n) between them.
+    str = str.replace(/([^\n])\s*\n\s*(#{1,6}\s|---|___)/g, "$1\n\n$2");
+
+    // 3. Remove ANSI color codes (e.g. from terminal output)
+    str = str.replace(/\x1b\[[0-9;]*m/g, "");
+
+    // 4. Normalize Math Delimiters
+    str = normalizeMathMarkdown(str);
+
+    return str;
   }, [children]);
 
   const components: Partial<Components> = {
-    // @ts-expect-error
+    // @ts-expect-error - types for code block handling
     code: ({ node, inline, className, children, ...props }) => {
       const match = /language-(\w+)/.exec(className || "");
+      const codeContent = String(children).replace(/\n$/, "");
+
       if (!inline && match && match[1] === "python") {
         return (
           <CodeViewer
             language={match[1]}
-            code={String(children).replace(/\n$/, "")}
+            code={codeContent}
           />
         );
       }
-      return !inline && match ? (
-        // @ts-expect-error
+      
+      return !inline ? (
         <pre
           {...props}
-          className={`${className} text-sm max-w-full overflow-x-auto bg-zinc-100 p-3 rounded-lg mt-2 dark:bg-zinc-800`}
+          className={`${className} text-sm max-w-full overflow-x-auto bg-zinc-100 p-3 rounded-lg mt-4 mb-4 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700`}
         >
-          <code className={match[1]}>{children}</code>
+          <code className={match ? match[1] : ""}>{children}</code>
         </pre>
       ) : (
         <code
-          className={`${className} text-sm bg-zinc-100 dark:bg-zinc-800 py-0.5 px-1 rounded-md`}
+          className={`${className} text-sm bg-zinc-100 dark:bg-zinc-800 py-0.5 px-1.5 rounded-md font-mono text-pink-500 dark:text-pink-400`}
           {...props}
         >
           {children}
@@ -85,37 +89,37 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     ol: ({ node, children, ...props }) => {
       return (
-        <ol className="list-decimal list-outside ml-4" {...props}>
+        <ol className="list-decimal list-outside ml-5 mb-4 space-y-1" {...props}>
           {children}
         </ol>
       );
     },
     li: ({ node, children, ...props }) => {
       return (
-        <li className="py-1" {...props}>
+        <li className="pl-1" {...props}>
           {children}
         </li>
       );
     },
     ul: ({ node, children, ...props }) => {
       return (
-        <ul className="list-disc list-outside ml-4" {...props}>
+        <ul className="list-disc list-outside ml-5 mb-4 space-y-1" {...props}>
           {children}
         </ul>
       );
     },
     strong: ({ node, children, ...props }) => {
       return (
-        <span className="font-semibold" {...props}>
+        <span className="font-semibold text-foreground" {...props}>
           {children}
         </span>
       );
     },
     a: ({ node, children, ...props }) => {
       return (
-        // @ts-expect-error
+        // @ts-expect-error - next/link types
         <Link
-          className="text-blue-500 hover:underline break-all"
+          className="text-blue-500 hover:underline break-all font-medium"
           target="_blank"
           rel="noreferrer"
           {...props}
@@ -126,50 +130,36 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     h1: ({ node, children, ...props }) => {
       return (
-        <h1 className="text-3xl font-semibold mt-6 mb-2" {...props}>
+        <h1 className="text-3xl font-bold mt-8 mb-4 border-b pb-2" {...props}>
           {children}
         </h1>
       );
     },
     h2: ({ node, children, ...props }) => {
       return (
-        <h2 className="text-2xl font-semibold mt-6 mb-2" {...props}>
+        <h2 className="text-2xl font-bold mt-8 mb-4" {...props}>
           {children}
         </h2>
       );
     },
     h3: ({ node, children, ...props }) => {
       return (
-        <h3 className="text-xl font-semibold mt-6 mb-2" {...props}>
+        <h3 className="text-xl font-bold mt-6 mb-3" {...props}>
           {children}
         </h3>
       );
     },
     h4: ({ node, children, ...props }) => {
       return (
-        <h4 className="text-lg font-semibold mt-6 mb-2" {...props}>
+        <h4 className="text-lg font-bold mt-6 mb-3" {...props}>
           {children}
         </h4>
       );
     },
-    h5: ({ node, children, ...props }) => {
-      return (
-        <h5 className="text-base font-semibold mt-6 mb-2" {...props}>
-          {children}
-        </h5>
-      );
-    },
-    h6: ({ node, children, ...props }) => {
-      return (
-        <h6 className="text-sm font-semibold mt-6 mb-2" {...props}>
-          {children}
-        </h6>
-      );
-    },
     table: ({ node, children, ...props }) => {
       return (
-        <div className="w-[80dvw] md:max-w-[720px] overflow-x-auto mt-2 rounded-lg ring-1 ring-border">
-          <table className="w-full text-sm" {...props}>
+        <div className="w-full overflow-x-auto mt-4 mb-4 rounded-lg border border-border">
+          <table className="w-full text-sm text-left" {...props}>
             {children}
           </table>
         </div>
@@ -177,7 +167,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     thead: ({ node, children, ...props }) => {
       return (
-        <thead className="bg-muted/60" {...props}>
+        <thead className="bg-muted/50 text-muted-foreground uppercase text-xs font-semibold" {...props}>
           {children}
         </thead>
       );
@@ -191,21 +181,21 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     tr: ({ node, children, ...props }) => {
       return (
-        <tr className="even:bg-muted/30 hover:bg-muted/40" {...props}>
+        <tr className="bg-background hover:bg-muted/50 transition-colors" {...props}>
           {children}
         </tr>
       );
     },
     th: ({ node, children, ...props }) => {
       return (
-        <th className="text-left font-medium px-3 py-2 whitespace-nowrap border-b border-border" {...props}>
+        <th className="px-4 py-3 whitespace-nowrap" {...props}>
           {children}
         </th>
       );
     },
     td: ({ node, children, ...props }) => {
       return (
-        <td className="px-3 py-2 align-top border-b border-border" {...props}>
+        <td className="px-4 py-3 align-top" {...props}>
           {children}
         </td>
       );
@@ -217,23 +207,9 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
         </p>
       );
     },
-    em: ({ node, children, ...props }) => {
-      return (
-        <em className="italic text-foreground" {...props}>
-          {children}
-        </em>
-      );
-    },
-    del: ({ node, children, ...props }) => {
-      return (
-        <del className="line-through text-foreground" {...props}>
-          {children}
-        </del>
-      );
-    },
     blockquote: ({ node, children, ...props }) => {
       return (
-        <blockquote className="border-l-4 border-muted pl-4 italic my-4 text-muted-foreground" {...props}>
+        <blockquote className="border-l-4 border-blue-500 pl-4 italic my-4 text-muted-foreground bg-muted/20 py-2 pr-2 rounded-r" {...props}>
           {children}
         </blockquote>
       );
@@ -242,8 +218,6 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       return <hr className="my-8 border-border" {...props} />;
     },
   };
-
-  const normalized = React.useMemo(() => normalizeMathMarkdown(cleanedChildren), [cleanedChildren]);
 
   return (
     <div className="max-w-full break-words text-foreground">
@@ -254,13 +228,12 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
             strict: false,
             trust: true,
             throwOnError: false,
-            errorColor: 'inherit',
-            output: 'html'
+            output: 'html' // Use HTML output for better accessibility/SSR
           }]
         ]}
         components={components}
       >
-        {normalized}
+        {content}
       </ReactMarkdown>
     </div>
   );
