@@ -5,6 +5,18 @@ import { motion } from "framer-motion";
 
 const updates = [
   {
+    date: "December 8",
+    description: [
+      "Calling web_search tool from main orchestrator agent for significantly reduced latency.",
+      "Updated markdown for better text formatting.",
+      "Added sources section that generates upon web search tool call.",
+    ],
+  },
+  {
+    date: "December 7",
+    description: "Added web_search tool successfully.",
+  },
+  {
     date: "December 4",
     description:
       "Data Analyst Agent now functioning safely. Code runs inside isolated E2B sandboxes with a persistent session. Next up: optimizing speed and improving the UI while the agent thinks.",
@@ -111,9 +123,17 @@ export default function AboutPage() {
               transition={{ duration: 0.25 }}
             >
               <div className="font-semibold text-foreground">{update.date}</div>
-              <p className="text-foreground/70 mt-1 leading-relaxed">
-                {update.description}
-              </p>
+              {Array.isArray(update.description) ? (
+                <ul className="text-foreground/70 mt-2 leading-relaxed list-disc pl-5 space-y-1">
+                  {update.description.map((item: string) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-foreground/70 mt-1 leading-relaxed">
+                  {update.description}
+                </p>
+              )}
             </motion.div>
           ))}
         </div>
