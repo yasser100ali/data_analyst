@@ -5,9 +5,11 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 const normalizeMathMarkdown = (input: string): string => {
   let output = input;
+  
   // Convert block lines like: [ ...latex... ] → $$ ... $$ so KaTeX renders
   output = output.replace(/^\s*\[(.+?)\]\s*$/gm, (fullMatch, inner) => {
     const content = String(inner).trim();
@@ -16,10 +18,27 @@ const normalizeMathMarkdown = (input: string): string => {
     }
     return fullMatch;
   });
+  
   // Convert escaped TeX display delimiters \[ ... \] → $$ ... $$
   output = output.replace(/\\\[(.+?)\\\]/gs, (_m, inner) => `$$\n${inner}\n$$`);
+  
   // Convert escaped inline delimiters \( ... \) → $...$
   output = output.replace(/\\\((.+?)\\\)/g, (_m, inner) => `$${inner}$`);
+  
+  // Handle lines that are primarily LaTeX (start with backslash commands, contain math symbols)
+  // but aren't already wrapped in $ delimiters
+  output = output.replace(/^([^\$\n]*)(\\[a-zA-Z]+[^\n]+)$/gm, (fullMatch, prefix, latexPart) => {
+    // Skip if already in math mode or if it's part of a code block
+    if (fullMatch.includes('$') || fullMatch.includes('```')) {
+      return fullMatch;
+    }
+    // If the line starts with LaTeX commands or contains significant LaTeX, wrap it
+    if (/^\\[a-zA-Z]+/.test(latexPart.trim()) || /\\[a-zA-Z]+.*[\\_{}\^]/.test(latexPart)) {
+      return prefix + '$' + latexPart.trim() + '$';
+    }
+    return fullMatch;
+  });
+  
   return output;
 };
 
