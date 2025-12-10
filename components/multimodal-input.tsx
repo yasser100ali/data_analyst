@@ -126,9 +126,9 @@ const suggestedActions = [
     action: "How does the Atlas Analyst Agent work?",
   },
   {
-    title: "What could Atlas do that ChatGPT Data Analyst can't?",
+    title: "How is code executed in Atlas? Is it safe?",
     label: "",
-    action: "What could Atlas do that ChatGPT Data Analyst can't?",
+    action: "Explain how code runs in Atlas and how safety is handled.",
   },
 ];
 
