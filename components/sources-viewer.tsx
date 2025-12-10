@@ -22,11 +22,13 @@ export function SourcesViewer({ sources, title = "Sources", className }: Sources
 
   if (!sources || sources.length === 0) return null;
 
+  const countLabel = `${sources.length} ${title.toUpperCase()}`;
+
   return (
     <div className={cn("my-3 rounded-xl border bg-card text-card-foreground overflow-hidden", className)}>
       <div className="flex items-center justify-between bg-muted/50 px-4 py-2 border-b">
         <span className="text-xs font-medium uppercase text-muted-foreground tracking-wide">
-          {title}
+          {countLabel}
         </span>
         <Button
           variant="ghost"
