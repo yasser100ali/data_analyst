@@ -41,21 +41,6 @@ export function Chat() {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  const isCallNotice = (message: Message) =>
-    typeof message.content === "string" &&
-    message.content.toLowerCase().includes("calling coding agent");
-
-  const hasCallNotice = messages.some(
-    (message: Message) => message.role === "assistant" && isCallNotice(message),
-  );
-
-  const lastUserIndex = (() => {
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i]?.role === "user") return i;
-    }
-    return -1;
-  })();
-
   // Lock page scroll while on chat view to avoid dual scrollbars
   useEffect(() => {
     const prevBody = document.body.style.overflow;
@@ -88,20 +73,12 @@ export function Chat() {
         {messages.length === 0 && <Overview />}
 
         {messages.map((message: Message, index: number) => (
-          <div key={message.id || index} className="flex flex-col gap-3">
-            <PreviewMessage
-              chatId={chatId}
-              message={message}
-              isLoading={isLoading && messages.length - 1 === index}
-            />
-            {isLoading && hasCallNotice && index === lastUserIndex && (
-                <div className="mx-4 max-w-3xl md:mx-auto">
-                  <div className="rounded-lg border border-border/60 bg-muted/70 px-4 py-3 text-sm font-mono text-muted-foreground">
-                    Calling Coding Agent...
-                  </div>
-                </div>
-              )}
-          </div>
+          <PreviewMessage
+            key={message.id || index}
+            chatId={chatId}
+            message={message}
+            isLoading={isLoading && messages.length - 1 === index}
+          />
         ))}
 
         {isLoading &&
