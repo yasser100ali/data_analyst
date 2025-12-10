@@ -167,6 +167,9 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                     analysis_query = args.get("query")
                         
                     if item.name == "coding_agent":
+                        # Surface a status update to the client before kicking off the agent
+                        yield '0:{text}\n'.format(text=json.dumps("Calling coding agent..."))
+
                         stdout, stderr, code_str = coding_agent(analysis_query, files_dict)
 
                         output_section = "\n".join(stdout) if stdout else ""
