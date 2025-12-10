@@ -13,7 +13,7 @@ export const Navbar = () => {
     <div className="h-14 px-4 flex flex-row gap-2 justify-between items-center bg-background border-b border-cyan-900/20">
       {/* Left: Logo with refresh */}
       <motion.button
-        onClick={() => router.push("/")}
+        onClick={() => window.location.assign("/")}
         className="flex items-center gap-1 font-mono font-bold text-sm tracking-wider text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
         whileTap={{ scale: 0.98 }}
       >
