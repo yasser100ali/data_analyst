@@ -241,6 +241,30 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     hr: ({ node, ...props }) => {
       return <hr className="my-8 border-border" {...props} />;
     },
+    img: ({ node, src, alt, ...props }) => {
+      // Handle base64 chart images from the coding agent
+      if (src && src.startsWith('data:image/')) {
+        return (
+          <div className="my-6 flex justify-center">
+            <img 
+              src={src} 
+              alt={alt || 'Chart'} 
+              className="max-w-full h-auto rounded-lg border border-border shadow-lg"
+              {...props}
+            />
+          </div>
+        );
+      }
+      // Regular images
+      return (
+        <img 
+          src={src} 
+          alt={alt || 'Image'} 
+          className="max-w-full h-auto rounded-lg my-4"
+          {...props}
+        />
+      );
+    },
   };
 
   return (
