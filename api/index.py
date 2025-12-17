@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from typing import List, Optional
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
@@ -95,6 +96,24 @@ tools = [
     }
 ]
 
+def strip_base64_images(text: str) -> str:
+    """
+    Replace base64 image data in markdown with a simple placeholder.
+    This prevents the orchestrator from seeing massive base64 strings.
+    
+    Matches patterns like: ![alt](data:image/png;base64,...)
+    """
+    # Pattern to match base64 image markdown, handling potential newlines
+    pattern = r'!\[([^\]]*)\]\(data:image/[^;]+;base64,[\s\S]*?\)'
+    
+    # Replace with a simple message
+    def replace_fn(match):
+        alt_text = match.group(1) or "chart"
+        # Check if it looks like a valid image closing
+        return f"[Chart generated: {alt_text}]"
+    
+    return re.sub(pattern, replace_fn, text)
+
 def stream_text(messages: List[dict], files_dict: dict = None):
     # Pick a valid model. Examples: "gpt-5.1" (reasoning) or "gpt-4o-mini" (fast/cheap)
     model_name = "gpt-5.1"
@@ -173,23 +192,21 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                         if stderr:
                             output_section += ("\n\nErrors:\n" if output_section else "Errors:\n") + "\n".join(stderr)
 
-                        # Prepare the tool result for the MODEL context
-                        # We can just use the text output for the model to reason about.
-                        # The model doesn't necessarily need the code repeated back to it in the tool output, 
-                        # but it helps if it needs to debug.
-                        # Let's include code in the context but plain.
-                        result_text_for_context = f"Output:\n{output_section}\n\nCode Executed:\n{code_str}"
+                        # Strip base64 images for MODEL context to save tokens
+                        # The orchestrator doesn't need to see massive base64 strings
+                        output_for_model = strip_base64_images(output_section)
+                        result_text_for_context = f"Output:\n{output_for_model}\n\nCode Executed:\n{code_str}"
 
-                        # Inject the code block into the CLIENT stream
-                        # This makes it appear in the chat UI.
+                        # Inject the FULL code block (with base64) into the CLIENT stream
+                        # This makes it appear in the chat UI with charts intact
                         # Format: python-exec with delimiter to pass both code and output
                         if code_str:
-                            # Combine code and output with simple delimiter
+                            # Combine code and output with simple delimiter (FULL output with images)
                             combined = f"{code_str.strip()}\n---OUTPUT---\n{output_section.strip()}"
                             code_block_markdown = f"\n```python-exec\n{combined}\n```\n\n"
                             yield '0:{text}\n'.format(text=json.dumps(code_block_markdown))
                         
-                        # Add function result to input for next iteration
+                        # Add function result to input for next iteration (stripped version)
                         input_list.append({
                             "type": "function_call_output",
                             "call_id": item.call_id,
