@@ -76,13 +76,35 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
         const delimiter = "\n---OUTPUT---\n";
         let parts = codeContent.split(delimiter);
         const code = (parts[0] || "").trim();
-        const output = (parts[1] || "").trim();
+        const rawOutput = (parts[1] || "").trim();
+
+        // Extract images from output so they can be rendered outside the code viewer
+        const imageRegex = /!\[([^\]]*)\]\((data:image\/[^;]+;base64,[\s\S]*?)\)/g;
+        const images: { alt: string; src: string }[] = [];
+        
+        // Remove images from the output text to avoid duplication inside CodeViewer
+        const cleanOutput = rawOutput.replace(imageRegex, (match, alt, src) => {
+          images.push({ alt, src });
+          return "";
+        }).trim();
+
         return (
-          <CodeViewer
-            language="python"
-            code={code}
-            output={output}
-          />
+          <div className="flex flex-col gap-4 my-4">
+            <CodeViewer
+              language="python"
+              code={code}
+              output={cleanOutput}
+            />
+            {images.map((img, i) => (
+              <div key={i} className="flex justify-center w-full">
+                <img 
+                  src={img.src} 
+                  alt={img.alt || "Generated Chart"}
+                  className="max-w-full h-auto rounded-lg border border-border shadow-lg"
+                />
+              </div>
+            ))}
+          </div>
         );
       }
 
