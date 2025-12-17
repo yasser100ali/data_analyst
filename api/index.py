@@ -65,6 +65,7 @@ IMPORTANT:
 - When the user asks for data analysis, call the tool with natural language instructions
 - The tool contains an expert data analyst agent that will generate and execute the code
 - Your job is to orchestrate and communicate, not to code
+- If the tool generates a chart/image (indicated by "[Chart generated: ...]" in the tool output), DO NOT attempt to generate an image link or markdown image in your response. The chart is already automatically displayed to the user. Say either nothing or be very brief in this case if output is only chart. 
 
 Example:
 - User: "Find the most impactful features for pts scored"
@@ -205,8 +206,7 @@ def stream_text(messages: List[dict], files_dict: dict = None):
                             combined = f"{code_str.strip()}\n---OUTPUT---\n{output_section.strip()}"
                             code_block_markdown = f"\n```python-exec\n{combined}\n```\n\n"
                             yield '0:{text}\n'.format(text=json.dumps(code_block_markdown))
-                        
-                        # Add function result to input for next iteration (stripped version)
+                       # Add function result to input for next iteration (stripped version)
                         input_list.append({
                             "type": "function_call_output",
                             "call_id": item.call_id,
