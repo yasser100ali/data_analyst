@@ -98,9 +98,9 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       return !inline ? (
         <pre
           {...(props as HTMLAttributes<HTMLPreElement>)}
-          className={`${className ?? ""} text-sm max-w-full overflow-x-auto bg-zinc-100 p-3 rounded-lg mt-4 mb-4 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700`}
+          className={`${className ?? ""} text-sm w-full overflow-x-auto font-mono my-3`}
         >
-          <code className={match ? match[1] : ""}>{children}</code>
+          <code className={match ? match[1] : "text-pink-600 dark:text-pink-400"}>{children}</code>
         </pre>
       ) : (
         <code
