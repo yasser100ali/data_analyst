@@ -16,9 +16,10 @@ import { cn } from "@/lib/utils";
 interface CodeViewerProps {
   language: string;
   code: string;
+  output?: string;
 }
 
-export function CodeViewer({ language, code }: CodeViewerProps) {
+export function CodeViewer({ language, code, output }: CodeViewerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -131,6 +132,22 @@ export function CodeViewer({ language, code }: CodeViewerProps) {
             )}
           </Highlight>
         </div>
+
+        {/* Code Output Section */}
+        {output && (
+          <div className="border-t border-border">
+            <div className="bg-muted/30 px-4 py-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Code output
+              </span>
+            </div>
+            <div className="bg-zinc-950 p-4 overflow-x-auto">
+              <pre className="m-0 text-xs font-mono text-zinc-300 whitespace-pre-wrap">
+                {output}
+              </pre>
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );

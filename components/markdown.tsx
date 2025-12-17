@@ -70,6 +70,20 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       const match = /language-(\w+)/.exec(className || "");
       const codeContent = String(children).replace(/\n$/, "");
 
+      // Handle python-exec: code with execution output
+      if (!inline && match && match[1] === "python-exec") {
+        const parts = codeContent.split("\n|||EXEC_OUTPUT|||\n");
+        const code = parts[0] || "";
+        const output = parts[1] || "";
+        return (
+          <CodeViewer
+            language="python"
+            code={code}
+            output={output}
+          />
+        );
+      }
+
       if (!inline && match && match[1] === "python") {
         return (
           <CodeViewer
