@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import type { Message } from "ai";
 import { PreviewMessage, ThinkingMessage } from "@/components/message";
@@ -20,6 +20,7 @@ export function Chat() {
   const {
     messages,
     setMessages,
+    data,
     handleSubmit,
     input,
     setInput,
@@ -37,6 +38,20 @@ export function Chat() {
       }
     },
   });
+
+  const codingAgentSignal = useMemo(() => {
+    if (!data || data.length === 0) return null;
+
+    for (let i = data.length - 1; i >= 0; i--) {
+      const item = data[i] as any;
+      if (item?.type === "agent_signal" && item?.key === "coding_agent") {
+        if (item?.state === "set") return (item?.message as string) || "Calling coding agent...";
+        if (item?.state === "clear") return null;
+      }
+    }
+
+    return null;
+  }, [data]);
 
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -84,6 +99,15 @@ export function Chat() {
         {isLoading &&
           messages.length > 0 &&
           messages[messages.length - 1].role === "user" && <ThinkingMessage />}
+
+        {isLoading && codingAgentSignal && (
+          <div className="w-full mx-auto max-w-3xl px-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="inline-flex h-2 w-2 rounded-full bg-primary/70 animate-pulse" />
+              <span>{codingAgentSignal}</span>
+            </div>
+          </div>
+        )}
 
         <div
           ref={messagesEndRef}

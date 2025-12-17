@@ -88,7 +88,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
         </pre>
       ) : (
         <code
-          className={`${className} text-sm bg-zinc-100 dark:bg-zinc-800 py-0.5 px-1.5 rounded-md font-mono text-pink-500 dark:text-pink-400`}
+          className={`${className} text-sm font-mono text-pink-600 dark:text-pink-400`}
           {...props}
         >
           {children}
