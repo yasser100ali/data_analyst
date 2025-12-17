@@ -30,7 +30,7 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Helper to render output with base64 images
+  // Helper to render output, replacing base64 images with a placeholder text
   const renderOutput = () => {
     if (!output) return null;
 
@@ -47,15 +47,10 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
       const match = part.match(/!\[([^\]]*)\]\((data:image\/[^;]+;base64,[\s\S]*?)\)/);
       
       if (match) {
-        const [_, alt, src] = match;
         return (
-          <div key={index} className="my-4 flex justify-center rounded-lg bg-white/90 p-2">
-            <img 
-              src={src} 
-              alt={alt || "Generated Chart"} 
-              className="max-w-full h-auto rounded-md shadow-sm"
-            />
-          </div>
+          <span key={index} className="text-muted-foreground italic block my-1">
+            [Successful code generation]
+          </span>
         );
       }
       
