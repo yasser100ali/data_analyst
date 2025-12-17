@@ -30,13 +30,40 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Helper to replace base64 images with a placeholder in the output
-  const displayOutput = output
-    ? output.replace(
-        /!\[([^\]]*)\]\(data:image\/[^;]+;base64,[\s\S]*?\)/g,
-        (_, alt) => `[Chart Generated: ${alt || "chart"}]`
-      )
-    : "";
+  // Helper to render output with base64 images
+  const renderOutput = () => {
+    if (!output) return null;
+
+    // Regex to match markdown images with base64 data
+    const imageRegex = /(!\[[^\]]*\]\(data:image\/[^;]+;base64,[\s\S]*?\))/g;
+    
+    // Split content by images (capturing group includes the separator in the result)
+    const parts = output.split(imageRegex);
+
+    return parts.map((part, index) => {
+      if (!part) return null;
+
+      // Check if this part is an image
+      const match = part.match(/!\[([^\]]*)\]\((data:image\/[^;]+;base64,[\s\S]*?)\)/);
+      
+      if (match) {
+        const [_, alt, src] = match;
+        return (
+          <div key={index} className="my-4 flex justify-center rounded-lg bg-white/90 p-2">
+            <img 
+              src={src} 
+              alt={alt || "Generated Chart"} 
+              className="max-w-full h-auto rounded-md shadow-sm"
+            />
+          </div>
+        );
+      }
+      
+      return (
+        <span key={index}>{part}</span>
+      );
+    });
+  };
 
   return (
     <div className="my-4 rounded-xl border bg-card text-card-foreground overflow-hidden">
@@ -142,7 +169,7 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
         </div>
 
         {/* Code Output Section */}
-        {displayOutput && (
+        {output && (
           <div className="border-t-2 border-border/60">
             <div className="bg-muted/20 px-4 py-2.5 border-b border-border/40">
               <span className="text-sm font-medium text-foreground">
@@ -151,7 +178,7 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
             </div>
             <div className="bg-background px-4 py-4">
               <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                {displayOutput}
+                {renderOutput()}
               </div>
             </div>
           </div>
