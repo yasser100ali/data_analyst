@@ -30,6 +30,14 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  // Helper to replace base64 images with a placeholder in the output
+  const displayOutput = output
+    ? output.replace(
+        /!\[([^\]]*)\]\(data:image\/[^;]+;base64,[\s\S]*?\)/g,
+        (_, alt) => `[Chart Generated: ${alt || "chart"}]`
+      )
+    : "";
+
   return (
     <div className="my-4 rounded-xl border bg-card text-card-foreground overflow-hidden">
       {/* Header */}
@@ -134,7 +142,7 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
         </div>
 
         {/* Code Output Section */}
-        {output && (
+        {displayOutput && (
           <div className="border-t-2 border-border/60">
             <div className="bg-muted/20 px-4 py-2.5 border-b border-border/40">
               <span className="text-sm font-medium text-foreground">
@@ -143,7 +151,7 @@ export function CodeViewer({ language, code, output }: CodeViewerProps) {
             </div>
             <div className="bg-background px-4 py-4">
               <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                {output}
+                {displayOutput}
               </div>
             </div>
           </div>
