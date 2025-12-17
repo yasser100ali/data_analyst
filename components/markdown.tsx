@@ -67,14 +67,16 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   const components: Partial<Components> = {
     // @ts-expect-error - types for code block handling
     code: ({ node, inline, className, children, ...props }) => {
-      const match = /language-(\w+)/.exec(className || "");
+      const match = /language-([\w-]+)/.exec(className || "");
       const codeContent = String(children).replace(/\n$/, "");
 
       // Handle python-exec: code with execution output
       if (!inline && match && match[1] === "python-exec") {
-        const parts = codeContent.split("\n|||EXEC_OUTPUT|||\n");
-        const code = parts[0] || "";
-        const output = parts[1] || "";
+        // Split on delimiter to separate code from output
+        const delimiter = "\n---OUTPUT---\n";
+        let parts = codeContent.split(delimiter);
+        const code = (parts[0] || "").trim();
+        const output = (parts[1] || "").trim();
         return (
           <CodeViewer
             language="python"

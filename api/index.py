@@ -182,10 +182,10 @@ def stream_text(messages: List[dict], files_dict: dict = None):
 
                         # Inject the code block into the CLIENT stream
                         # This makes it appear in the chat UI.
-                        # Format: python|||OUTPUT to pass both code and output
+                        # Format: python-exec with delimiter to pass both code and output
                         if code_str:
-                            # Combine code and output with delimiter
-                            combined = f"{code_str}\n|||EXEC_OUTPUT|||\n{output_section}"
+                            # Combine code and output with simple delimiter
+                            combined = f"{code_str.strip()}\n---OUTPUT---\n{output_section.strip()}"
                             code_block_markdown = f"\n```python-exec\n{combined}\n```\n\n"
                             yield '0:{text}\n'.format(text=json.dumps(code_block_markdown))
                         
