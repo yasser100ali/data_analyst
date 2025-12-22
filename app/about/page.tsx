@@ -5,44 +5,15 @@ import { motion } from "framer-motion";
 import { Github, Linkedin as LinkedinIcon, Mail } from "lucide-react";
 
 const updates = [
-  {
-    date: "December 8",
-    description: [
-      "Calling web_search tool from main orchestrator agent for significantly reduced latency.",
-      "Updated markdown for better text formatting.",
-      "Added sources section that generates upon web search tool call.",
-    ],
-  },
-  {
-    date: "December 7",
-    description: "Added web_search tool successfully.",
-  },
-  {
-    date: "December 4",
-    description:
-      "Data Analyst Agent now functioning safely. Code runs inside isolated E2B sandboxes with a persistent session. Next up: optimizing speed and improving the UI while the agent thinks.",
-  },
-  {
-    date: "November 30",
-    description:
-      "Built custom orchestration on the OpenAI Responses API to route questions between the chat model and the analysis tools, with streamed responses from the orchestrator.",
-  },
-  {
-    date: "November 29",
-    description:
-      "Built the Python execution sandbox in code_execution.py using the E2B code interpreter so generated code runs securely and reuses a shared DataAnalysisSession.",
-  },
-  {
-    date: "November 28",
-    description:
-      "Enabled file uploads for PDF, Excel, and CSV. Files are stored in blob storage and exposed to the sandbox via signed URLs so the analysis layer can read them directly.",
-  },
+  "Integrated web search tool with sources for real-time information.",
+  "Chart generation capabilities with automatic visualization of analysis results.",
+  "Deployed Data Analyst Agent in isolated E2B sandboxes for secure Python execution.",
+  "Custom orchestration for seamless routing between chat and analysis tools.",
+  "Support for PDF, Excel, and CSV file uploads via Vercel Blob.",
 ];
 
 const roadmap = [
-  "Ship a research_agent browsing prototype wired into the chat flow.",
-  "Support live data retrieval and pass fetched data into the analysis sandbox.",
-  "Expand coding_agent outputs with default matplotlib charts for quantitative answers.",
+  "Live data retrieval from external APIs.",
 ];
 
 export default function AboutPage() {
@@ -115,26 +86,17 @@ export default function AboutPage() {
           UPDATES
         </h2>
         <div className="space-y-3">
-          {updates.map((update) => (
+          {updates.map((update, index) => (
             <motion.div
-              key={update.date}
+              key={index}
               className="rounded-md border border-cyan-900/40 bg-background/60 p-4"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.25, delay: index * 0.05 }}
             >
-              <div className="font-semibold text-foreground">{update.date}</div>
-              {Array.isArray(update.description) ? (
-                <ul className="text-foreground/70 mt-2 leading-relaxed list-disc pl-5 space-y-1">
-                  {update.description.map((item: string) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-foreground/70 mt-1 leading-relaxed">
-                  {update.description}
-                </p>
-              )}
+              <p className="text-foreground/70 leading-relaxed">
+                {update}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -142,7 +104,7 @@ export default function AboutPage() {
 
       <div className="space-y-4">
         <h2 className="text-xl font-mono tracking-wider text-cyan-300">
-          GOALS · DEC 8–14
+          UPCOMING
         </h2>
         <ul className="list-disc pl-5 space-y-2 text-foreground/80 leading-relaxed">
           {roadmap.map((item) => (
